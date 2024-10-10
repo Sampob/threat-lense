@@ -1,0 +1,30 @@
+version: "3"
+
+services:
+  app:
+    build: .
+    container_name: threat_lense
+    environment:
+      - FLASK_ENV=development
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    ports:
+      - "5000:5000"
+    depends_on:
+      - redis
+      - celery_worker
+    volumes:
+      - .:/app
+
+  redis:
+    image: "redis:alpine"
+    container_name: redis_cache
+    ports:
+      - "6379:6379"
+
+  celery_worker:
+    build: .
+    container_name: celery_worker
+    command: celery -A app.celery worker --loglevel=info
+    depends_on:
+      - redis

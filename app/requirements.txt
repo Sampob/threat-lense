@@ -3,3 +3,4 @@ celery
 redis
 requests
 ipaddress
+python-dotenv
