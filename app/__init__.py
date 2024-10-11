@@ -15,13 +15,6 @@ redis_client = redis.StrictRedis(
     decode_responses=True
 )
 
-# Initialize Celery
-celery = Celery(
-    __name__,
-    broker=Config.CELERY_BROKER_URL,
-    backend=Config.CELERY_RESULT_BACKEND
-)
-
 # Flask app factory
 def create_app():
     try:
@@ -36,11 +29,6 @@ def create_app():
 
     # Load configuration
     app.config.from_object(Config)
-
-    # Initialize Celery
-    celery.conf.update(app.config)
-    from app.tasks import search_task
-    celery.autodiscover_tasks(["app.tasks"])
 
     # Register Flask routes
     from app.routes import configure_routes
