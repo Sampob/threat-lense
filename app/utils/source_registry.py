@@ -1,8 +1,8 @@
-from app.sources.base_source import BaseSource
-
 import os
 import importlib
 import inspect
+
+from app.sources.base_source import BaseSource
 
 class SourceRegistry:
     _instances: dict[str, BaseSource] = {}

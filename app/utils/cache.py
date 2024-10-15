@@ -1,9 +1,9 @@
+import hashlib
+import json
+
 from app import redis_client
 from app.config import Config
 from app.utils.logger import app_logger
-
-import hashlib
-import json
 
 def generate_cache_key(indicator):
     """Generate a unique key based on query parameter."""

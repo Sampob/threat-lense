@@ -129,7 +129,7 @@ class BaseSource(abc.ABC):
         elif indicator_type == IndicatorType.HASH:
             data = await self.fetch_hash_intel(indicator)
         else:
-            source_logger.warning(f"Invalid indicator type for indicator '{indicator}'")
+            source_logger.warning(f"Invalid indicator type for indicator {indicator}")
         return data
 
     @abc.abstractmethod

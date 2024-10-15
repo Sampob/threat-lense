@@ -13,7 +13,7 @@ semaphore = Semaphore(Config.MAX_CONCURRENT_REQUESTS)
 
 @celery.task(bind=True)
 def search_task(self, indicator: str):
-    app_logger.info(f"Starting search task for '{indicator}'")
+    app_logger.info(f"Starting search task for {indicator}")
     return asyncio.run(main_task(indicator))
 
 async def main_task(indicator: str):
@@ -23,10 +23,10 @@ async def main_task(indicator: str):
     # Check for cached results
     cached_results = redis_client.get(cache_key)
     if cached_results:
-        app_logger.info(f"Cached result found for '{indicator}', returning cached result")
+        app_logger.info(f"Cached result found for {indicator}, returning cached result")
         return handle_result(cached_results)
 
-    app_logger.info(f"No cached result found for '{indicator}', proceeding to searching")
+    app_logger.info(f"No cached result found for {indicator}, proceeding to searching")
 
     sources = SourceRegistry.get_instance()
     

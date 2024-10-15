@@ -1,6 +1,7 @@
-import aiohttp
 from app.sources.base_source import BaseSource
 from app.utils.logger import source_logger
+
+import aiohttp
 
 class AbuseIpDbSource(BaseSource):
     def __init__(self):
@@ -17,7 +18,7 @@ class AbuseIpDbSource(BaseSource):
         return await self.fetch_ip_intel(indicator)
     
     async def fetch_ip_intel(self, indicator: str) -> dict:
-        source_logger.debug(f"{self.name} | Searching for indicator '{indicator}'")
+        source_logger.debug(f"{self.name} | Searching for indicator {indicator}")
         querystring = {
             "ipAddress": indicator,
             "maxAgeInDays": "90"

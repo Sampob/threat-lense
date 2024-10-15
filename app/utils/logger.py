@@ -2,7 +2,7 @@ import logging
 import os
 
 def setup_logger(name, log_file="app.log", level=logging.DEBUG):
-    """Function to set up a logger."""
+    """ Function to set up a logger. """
     
     # Create logs directory if it doesn"t exist
     if not os.path.exists("logs"):

@@ -1,7 +1,8 @@
 import re
-import ipaddress
 
 from app.utils.enums import IndicatorType
+
+import ipaddress
 
 def validate_ip(ip_string: str) -> IndicatorType:
     """
@@ -57,7 +58,7 @@ def validate_hash(hash: str) -> IndicatorType:
     
     :return: Boolean if the string is a valid hash
     """
-    if len(hash) in {32, 40, 64} and all(c in '0123456789abcdefABCDEF' for c in hash):
+    if len(hash) in {32, 40, 64} and all(c in "0123456789abcdefABCDEF" for c in hash):
         return True
     else:
         return False
