@@ -1,5 +1,5 @@
 from app.tasks import search_task
-from app.logger import app_logger
+from app.utils.logger import app_logger
 
 from flask import jsonify, request
 

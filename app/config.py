@@ -7,7 +7,7 @@ class Config:
     # Redis settings
     REDIS_HOST = os.getenv("REDIS_HOST", "redis")  # Default to "redis" (Docker service name)
     REDIS_PORT = os.getenv("REDIS_PORT", 6379)
-    REDIS_DB = 0  # Optionally, you can configure multiple Redis databases
+    REDIS_DB = 0
 
     # Celery settings
     CELERY_BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}"

@@ -1,10 +1,9 @@
 import sys
 
 from app.config import Config
-from app.logger import app_logger
+from app.utils.logger import app_logger
 
 from flask import Flask
-from celery import Celery
 import redis
 
 # Create a Redis connection

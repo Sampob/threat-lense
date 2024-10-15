@@ -1,8 +1,8 @@
 from app import redis_client
 from app.celery_worker import celery
-from app.utils import generate_cache_key, cache_results, process_data
 from app.config import Config
-from app.logger import app_logger
+from app.utils.cache import generate_cache_key, cache_results
+from app.utils.logger import app_logger
 
 import threading, requests
 
@@ -46,7 +46,6 @@ def search_task(self, indicator: str):
     # Cache results
     cache_results(cache_key, results, expiration=Config.CACHE_EXPIRATION)
 
-    app_logger.info(f"Returning results: {results}")
     return handle_returning(results)
 
 def handle_returning(results):
