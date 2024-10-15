@@ -1,7 +1,7 @@
 import logging
 import os
 
-def setup_logger(name, log_file="app.log", level=logging.INFO):
+def setup_logger(name, log_file="app.log", level=logging.DEBUG):
     """Function to set up a logger."""
     
     # Create logs directory if it doesn"t exist
@@ -33,3 +33,4 @@ def setup_logger(name, log_file="app.log", level=logging.INFO):
 
 # Create a default logger for the application
 app_logger = setup_logger("app_logger")
+source_logger = setup_logger("source_logger", log_file="sources.log", level=logging.DEBUG)
