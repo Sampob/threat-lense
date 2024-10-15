@@ -4,3 +4,5 @@ redis
 requests
 ipaddress
 python-dotenv
+aiohttp
+asyncio

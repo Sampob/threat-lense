@@ -12,6 +12,9 @@ class Config:
     # Celery settings
     CELERY_BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}"
     CELERY_RESULT_BACKEND = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}"
+    
+    # Concurrency
+    MAX_CONCURRENT_REQUESTS = 5
 
     # Cache expiration settings
     CACHE_EXPIRATION = 3600  # Cache expiration in seconds (1 hour)
