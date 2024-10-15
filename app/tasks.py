@@ -1,7 +1,8 @@
 from app import redis_client
 from app.celery_worker import celery
 from app.config import Config
-from app.sources.base_source import SourceFactory, BaseSource
+from app.sources.base_source import BaseSource
+from app.utils.source_registry import SourceRegistry
 from app.utils.cache import generate_cache_key, cache_results
 from app.utils.logger import app_logger
 
@@ -11,9 +12,9 @@ from asyncio import Semaphore
 semaphore = Semaphore(Config.MAX_CONCURRENT_REQUESTS)
 
 @celery.task(bind=True)
-def search_task(indicator: str):
+def search_task(self, indicator: str):
     app_logger.info(f"Starting search task for '{indicator}'")
-    asyncio.run(main_task(indicator))
+    return asyncio.run(main_task(indicator))
 
 async def main_task(indicator: str):
     # Generate cache key
@@ -27,8 +28,8 @@ async def main_task(indicator: str):
 
     app_logger.info(f"No cached result found for '{indicator}', proceeding to searching")
 
-    sources = SourceFactory.create_sources()
-
+    sources = SourceRegistry.get_instance()
+    
     # List to store results
     results = []
 
@@ -37,16 +38,21 @@ async def main_task(indicator: str):
             try:
                 return await source.fetch_intel(indicator)
             except Exception as e:
-                app_logger.error(f"Error fetching data from {source.__class__.__name__}: {e}")
+                app_logger.error(f"Error fetching data from {source.get_name()}: {e}")
                 return None
     
-    tasks = [query_source(source) for source in sources]
+    tasks = [query_source(source) for source in sources.values()]
+    
     results = await asyncio.gather(*tasks)
     
-    results = [result for result in results if result is not None]
+    #results = [result for result in results if result is not None]
+    results = {source.get_name(): result for source, result in zip(sources.values(), results)}
     
-    # Cache results
-    cache_results(cache_key, results, expiration=Config.CACHE_EXPIRATION)
+    # Cache results, ignore empty results
+    if results:
+        cache_results(cache_key, results, expiration=Config.CACHE_EXPIRATION)
+    else:
+        app_logger.info("Empty results, skipping caching")
 
     return handle_result(results)
 

@@ -1,37 +1,73 @@
 import abc
+from datetime import datetime, timezone
 
 from app.utils.enums import IndicatorType, Verdict
 from app.utils.indicator_type import get_indicator_type
-from app.utils.logger import app_logger
+from app.utils.logger import source_logger
 
 import aiohttp
 
-class SourceMeta(abc.ABCMeta):
-    _sources = {}
+class BaseSource(abc.ABC):
+    """
+    Base class for all API sources. Every source should implement this. Unified handling of sources with different features. 
+    """
     
-    def __new__(mcs, name, bases, class_dict):
-        cls = super().__new__(mcs, name, bases, class_dict)
-        if bases != (object,):
-            app_logger.debug(f"Adding object '{cls.__name__}' to _sources")
-            SourceMeta._sources[cls.__name__] = cls
-        return cls
-
-    @classmethod
-    def get_sources(cls):
-        return cls._sources.values()
-
-class SourceFactory:
-    @staticmethod
-    def create_sources():
-        sources = []
-        for source_cls in SourceMeta.get_sources():
-            sources.append(source_cls())
-        return sources
-
-class BaseSource(metaclass=SourceMeta):
-    """ Base class for all API sources. """
+    def __init__(self, url: str="", name: str=""):
+        self.url = url
+        self.name = name
     
-    async def http_request(self, url: str, method="GET", headers=None, json=None, params=None, timeout=10, retries=3):
+    def get_name(self) -> str:
+        """
+        Function to get source's name. 
+        
+        :return: Source's name
+        """
+        if self.name:
+            return self.name
+        else:
+            return self.__class__.__name__
+    
+    def get_verdict(self, value: int) -> Verdict:
+        """
+        Transforms integer value to a Verdict enum. 
+        
+        :param value: Integer that represents an IOC's verdict
+        
+        :return: Transformed, unified Verdict enum
+        """
+        if isinstance(value, int):
+            if value >= 2:
+                return Verdict(2)
+            elif value == 1:
+                return Verdict(1)
+            return Verdict(0)
+        else:
+            return Verdict(-1)
+        
+    
+    def format_response(self, summary: str="", verdict: Verdict=Verdict.NONE, url: str="", data: dict={}) -> dict:
+        return_dict = {
+            "summary": summary,
+            "verdict": self.get_verdict(verdict).name,
+            "url": url,
+            "data": data
+        }
+        return return_dict
+    
+    def format_error(self, url: str="", message: str="", status_code: int=-1, timestamp: datetime=datetime.now(timezone.utc)) -> dict:
+        return_dict = {
+            "summary": "error",
+            "verdict": self.get_verdict(-1).name,
+            "url": url,
+            "data": {
+                "message": message,
+                "status_code": status_code,
+                "timestamp": str(timestamp)
+            }
+        }
+        return return_dict
+    
+    async def http_request(self, url: str, method="GET", headers=None, json=None, params=None, timeout=10, retries=3) -> dict:
         """
         A helper method to handle HTTP requests uniformly and handle errors.
         
@@ -42,6 +78,8 @@ class BaseSource(metaclass=SourceMeta):
         :param params: Dictionary of query parameters to append to the URL
         :param timeout: Timeout for the request in seconds
         :param retries: Number of times to retry the request in case of transient errors
+        
+        :return: Dict of HTTP response
         """
         attempt = 0
         while attempt < retries:
@@ -56,14 +94,15 @@ class BaseSource(metaclass=SourceMeta):
                         return await response.json()  # Assuming the response is JSON
 
             except aiohttp.ClientResponseError as e:
-                app_logger.error(f"URL: {url}, HTTP Error: {e.status} - {e.message} | Retrying... ({attempt}/{retries})")
+                source_logger.error(f"URL: {url}, HTTP Error: {e.status} - {e.message}")
                 if e.status in {500, 502, 503, 504}:  # Retry on server errors
                     attempt += 1
+                    source_logger.error(f"Retrying... ({attempt}/{retries})")
                 else:
                     raise
             except aiohttp.ClientError as e:
                 # Handle other connection-related errors (timeouts, network failures)
-                app_logger.error(f"URL: {url}, Connection error: {str(e)}")
+                source_logger.error(f"URL: {url}, Connection error: {str(e)}")
                 raise
         
         raise RuntimeError(f"Failed after {retries} attempts")
@@ -76,24 +115,23 @@ class BaseSource(metaclass=SourceMeta):
         
         :return: Enriched IOC data from the source
         """
-        if self.init:
-            indicator_type = get_indicator_type(indicator)
-            
-            data = None
-            if indicator_type == IndicatorType.IPv4:
-                data = await self.fetch_ipv4_intel(indicator)
-            elif indicator_type == IndicatorType.IPv6:
-                data = await self.fetch_ipv6_intel(indicator)
-            elif indicator_type == IndicatorType.DOMAIN:
-                data = await self.fetch_domain_intel(indicator)
-            elif indicator_type == IndicatorType.URL:
-                data = await self.fetch_url_intel(indicator)
-            elif indicator_type == IndicatorType.HASH:
-                data = await self.fetch_hash_intel(indicator)
-            else:
-                app_logger.warning(f"Invalid indicator type for indicator '{indicator}'")
-            return data
-    
+        indicator_type = get_indicator_type(indicator)
+        
+        data = None
+        if indicator_type == IndicatorType.IPv4:
+            data = await self.fetch_ipv4_intel(indicator)
+        elif indicator_type == IndicatorType.IPv6:
+            data = await self.fetch_ipv6_intel(indicator)
+        elif indicator_type == IndicatorType.DOMAIN:
+            data = await self.fetch_domain_intel(indicator)
+        elif indicator_type == IndicatorType.URL:
+            data = await self.fetch_url_intel(indicator)
+        elif indicator_type == IndicatorType.HASH:
+            data = await self.fetch_hash_intel(indicator)
+        else:
+            source_logger.warning(f"Invalid indicator type for indicator '{indicator}'")
+        return data
+
     @abc.abstractmethod
     async def fetch_ipv4_intel(self, indicator: str):
         raise NotImplementedError("Subclasses should implement this method")
@@ -101,7 +139,7 @@ class BaseSource(metaclass=SourceMeta):
     @abc.abstractmethod
     async def fetch_ipv6_intel(self, indicator: str):
         raise NotImplementedError("Subclasses should implement this method")
-
+    
     @abc.abstractmethod
     async def fetch_domain_intel(self, indicator: str):
         raise NotImplementedError("Subclasses should implement this method")
