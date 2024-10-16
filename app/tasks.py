@@ -1,7 +1,7 @@
 from app import redis_client
 from app.celery_worker import celery
 from app.config import Config
-from app.sources.base_source import BaseSource
+from app.sources.base_source import BaseSource, get_indicator_type
 from app.utils.source_registry import SourceRegistry
 from app.utils.cache import generate_cache_key, cache_results
 from app.utils.logger import setup_logger
@@ -34,33 +34,49 @@ async def main_task(indicator: str):
     
     # List to store results
     results = []
-    encountered_error = False
 
     async def query_source(source: BaseSource):
         async with semaphore:
             try:
-                return await source.fetch_intel(indicator)
+                response = await source.fetch_intel(indicator)
+                return response
             except Exception as e:
                 logger.error(f"Error fetching data from {source.get_name()}: {e}")
-                encountered_error = True
                 return None
     
     tasks = [query_source(source) for source in sources.values()]
     
     results = await asyncio.gather(*tasks)
     
-    results = {source.get_name(): result for source, result in zip(sources.values(), results)}
+    results = {source.get_name(): result for source, result in zip(sources.values(), results) if result}
+    
+    encountered_error = False
+    
+    for value in results.values():
+        if value:
+            if value.get("summary") == "error":
+                encountered_error = True
+                break
+        else:
+            encountered_error = True
+            break
+    
+    logger.info("Adding additional data to results")
+    final_result = {
+        "indicator": indicator,
+        "type": get_indicator_type(indicator).name,
+        "sources": results
+    }
     
     # Cache results, ignore if error was encountered and empty results
     if encountered_error:
         logger.info("Encountered an error, skipping caching")
     elif results:
-        cache_results(cache_key, results, expiration=Config.CACHE_EXPIRATION)
+        cache_results(cache_key, final_result, expiration=Config.CACHE_EXPIRATION)
     else:
         logger.info("Empty results, skipping caching")
 
-    return handle_result(results)
+    return handle_result(final_result)
 
-def handle_result(results):
-    logger.info(f"Returning results: {results}")
+def handle_result(results: dict):
     return results
