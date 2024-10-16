@@ -27,7 +27,7 @@ class AlienVaultSource(BaseSource):
     async def make_request(self, type: str, indicator: str):
         logger.debug(f"Searching for indicator {indicator}")
         headers = {
-            "X-OTX-API-KEY": "",
+            "X-OTX-API-KEY": self.fetch_api_key(),
             "Content-Type": "application/json"
         }
         try:

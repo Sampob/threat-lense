@@ -20,7 +20,7 @@ class AbuseIpDbSource(BaseSource):
         
         headers = {
             "Accept": "application/json",
-            "Key": "" #self.api_key
+            "Key": self.fetch_api_key()
         }
         querystring = {
             "ipAddress": indicator,

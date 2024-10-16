@@ -1,6 +1,7 @@
 import abc
 from datetime import datetime, timezone
 
+from app.models import fetch_api_key
 from app.utils.enums import IndicatorType, Verdict
 from app.utils.indicator_type import get_indicator_type
 from app.utils.logger import setup_logger
@@ -47,7 +48,9 @@ class BaseSource(abc.ABC):
             return Verdict(-1)
         else:
             return Verdict(-1)
-        
+    
+    def fetch_api_key(self) -> str:
+        return ""
     
     def format_response(self, summary: str="", verdict: Verdict=Verdict.NONE, url: str="", data: dict={}) -> dict:
         return_dict = {

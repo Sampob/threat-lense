@@ -1,6 +1,9 @@
-from app import db
-from cryptography.fernet import Fernet
 from app.config import Config
+
+from flask_sqlalchemy import SQLAlchemy
+from cryptography.fernet import Fernet
+
+db = SQLAlchemy()
 
 # Encrypt/Decrypt helper
 def encrypt_data(data):
@@ -11,18 +14,29 @@ def decrypt_data(data):
     cipher_suite = Fernet(Config.SECRET_KEY.encode("utf-8"))
     return cipher_suite.decrypt(data.encode("utf-8")).decode("utf-8")
 
+def fetch_api_key(name):
+    api_key_entry = APIKey.query.filter_by(source_name=name).first()
+    
+    if api_key_entry:
+        return api_key_entry.api_key
+    else:
+        raise ValueError(f"No API key found for source '{name}'")
+
 class Source(db.Model):
     """ Represents different external sources. """
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(150), unique=True, nullable=False)
     requires_api_key = db.Column(db.Boolean, default=False)
+        
+    @property
+    def is_api_key_configured(self):
+        return APIKey.query.filter_by(source_name=self.name).first() is not None
 
 class APIKey(db.Model):
     """ Stores encrypted API keys for sources that need them. """
     id = db.Column(db.Integer, primary_key=True)
     encrypted_key = db.Column(db.String(500), nullable=False)
-    source_id = db.Column(db.Integer, db.ForeignKey("source.id"), nullable=False)
-    source = db.relationship("Source", backref="api_key", lazy=True)
+    source_name = db.Column(db.Integer, db.ForeignKey("source.name"), nullable=False)
 
     def set_key(self, raw_key):
         self.encrypted_key = encrypt_data(raw_key)

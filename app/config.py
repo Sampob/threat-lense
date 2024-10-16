@@ -21,5 +21,5 @@ class Config:
 
     # SQLAlchemy settings
     SQLALCHEMY_DATABASE_URI = os.getenv("SQLALCHEMY_DATABASE_URI", "sqlite:///app_management.db")
-    SECRET_KEY = os.getenv("SECRET_KEY", "development-secret-key")
+    SECRET_KEY = os.getenv("SECRET_KEY", "ET2Hri8wOF5dVplna91hLJfH2Ry3M1KMf1kCVddJrM0=")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
