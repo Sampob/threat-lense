@@ -5,7 +5,7 @@ import aiohttp
 
 class AbuseIpDbSource(BaseSource):
     def __init__(self):
-        super().__init__("https://api.abuseipdb.com/api/v2/check", "AbuseIPDB")
+        super().__init__(url="https://api.abuseipdb.com/api/v2/check", name="AbuseIPDB")
         self.headers = {
             "Accept": "application/json",
             "Key": "" #self.api_key
