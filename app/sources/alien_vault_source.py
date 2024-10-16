@@ -29,18 +29,21 @@ class AlienVaultSource(BaseSource):
         return await self.make_request("file", hash)
     
     async def make_request(self, type: str, indicator: str):
-        logger.debug(f"{self.name} | Searching for indicator {indicator}")
+        logger.debug(f"Searching for indicator {indicator}")
         try:
             response = await self.http_request(self.url.format(type, indicator), headers=self.headers)
         except aiohttp.ClientResponseError as e:
+            logger.error(f"ClientResponseError: {str(e)}")
             return self.format_error(self.create_url(type, indicator), message=e.message, status_code=e.status)
         except aiohttp.ClientError as e:
+            logger.error(f"ClientError: {str(e)}")
             return self.format_error(self.create_url(type, indicator), message=str(e), status_code=-1)
         except RuntimeError as e:
+            logger.error(f"RuntimeError: {str(e)}")
             return self.format_error(self.create_url(type, indicator), message=str(e), status_code=-1)
         except Exception as e:
+            logger.error(f"Exception: {str(e)}")
             return self.format_error(self.create_url(type, indicator), message=str(e))
-        logger.debug(f"{self.name} | results: {response}")
         return self.parse_intel(response)
     
     def create_url(self, type: str, indicator: str) -> str:
@@ -52,22 +55,18 @@ class AlienVaultSource(BaseSource):
         
         # Simple analysis to determine possible suspicious activity
         
-        pulse_count = intel["pulse_info"]["count"]
+        pulse_count = intel.get("pulse_info", {}).get("count", 0)
+        summary_string = f"No. of pulses: {pulse_count}"
+        if pulse_count:
+            if pulse_count > 10:
+                verdict = 2
+            elif pulse_count > 0:
+                verdict = 1
+        if len(intel.get("validation", [])) > 0:
+            if verdict > 0:
+                verdict = 1
+            summary_string = f"Accepted whitelist on indicator. No. of pulses: {pulse_count}"
         
-        if intel["malware"]["size"] > 0:
-            verdict += 2
-        if pulse_count > 10:
-            verdict += 2
-        elif pulse_count > 0:
-            verdict += 1
-        if len(intel["validation"]) > 0:
-            verdict = 0
-
-        if len(intel["validation"]) > 0:
-            summary_string = f"Accepted whitelist. No. of pulses: {pulse_count}"
-        else:
-            summary_string = f"No. of pulses: {pulse_count}"
-        
-        formatted_intel = self.format_response(summary=summary_string, verdict=verdict, url=self.create_url(intel["type"], intel["indicator"]), data=intel)
+        formatted_intel = self.format_response(summary=summary_string, verdict=verdict, url=self.create_url(intel.get("type"), intel.get("indicator")), data=intel)
         
         return formatted_intel
