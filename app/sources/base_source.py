@@ -120,6 +120,7 @@ class BaseSource(abc.ABC):
         :return: Enriched IOC data from the source
         """
         indicator_type = get_indicator_type(indicator)
+        logger.info(f"Indicator type: {indicator_type.name}")
         
         data = None
         if indicator_type == IndicatorType.IPv4:

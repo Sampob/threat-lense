@@ -17,9 +17,9 @@ redis_client = redis.StrictRedis(
 # Flask app factory
 def create_app():
     try:
-        app_logger.info(f"Testing connection to Redis at {Config.REDIS_HOST}:{Config.REDIS_PORT}")
+        app_logger.debug(f"Testing connection to Redis at {Config.REDIS_HOST}:{Config.REDIS_PORT}")
         redis_client.ping()
-        app_logger.info("Connection successful, continuing initialization")
+        app_logger.debug("Connection successful, continuing initialization")
     except redis.exceptions.TimeoutError as e:
         app_logger.error("Connection to Redis timed out, exiting")
         sys.exit()
