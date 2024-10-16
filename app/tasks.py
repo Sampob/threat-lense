@@ -32,6 +32,7 @@ async def main_task(indicator: str):
     
     # List to store results
     results = []
+    encountered_error = False
 
     async def query_source(source: BaseSource):
         async with semaphore:
@@ -39,17 +40,19 @@ async def main_task(indicator: str):
                 return await source.fetch_intel(indicator)
             except Exception as e:
                 app_logger.error(f"Error fetching data from {source.get_name()}: {e}")
+                encountered_error = True
                 return None
     
     tasks = [query_source(source) for source in sources.values()]
     
     results = await asyncio.gather(*tasks)
     
-    #results = [result for result in results if result is not None]
     results = {source.get_name(): result for source, result in zip(sources.values(), results)}
     
-    # Cache results, ignore empty results
-    if results:
+    # Cache results, ignore if error was encountered and empty results
+    if encountered_error:
+        app_logger.info("Encountered an error, skipping caching")
+    elif results:
         cache_results(cache_key, results, expiration=Config.CACHE_EXPIRATION)
     else:
         app_logger.info("Empty results, skipping caching")
