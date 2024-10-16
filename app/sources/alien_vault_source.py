@@ -8,10 +8,6 @@ logger = setup_logger(__name__, log_file="sources.log")
 class AlienVaultSource(BaseSource):
     def __init__(self):
         super().__init__(url="https://otx.alienvault.com/api/v1/indicators/{}/{}/general/", name="Open Threat Exchange")
-        self.headers = {
-            "X-OTX-API-KEY": "",
-            "Content-Type": "application/json"
-        }
     
     async def fetch_ipv4_intel(self, ip: str):
         return await self.make_request("IPv4", ip)
@@ -30,8 +26,12 @@ class AlienVaultSource(BaseSource):
     
     async def make_request(self, type: str, indicator: str):
         logger.debug(f"Searching for indicator {indicator}")
+        headers = {
+            "X-OTX-API-KEY": "",
+            "Content-Type": "application/json"
+        }
         try:
-            response = await self.http_request(self.url.format(type, indicator), headers=self.headers)
+            response = await self.http_request(self.url.format(type, indicator), headers=headers)
         except aiohttp.ClientResponseError as e:
             logger.error(f"ClientResponseError: {str(e)}")
             return self.format_error(self.create_url(type, indicator), message=e.message, status_code=e.status)

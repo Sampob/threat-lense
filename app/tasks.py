@@ -1,5 +1,4 @@
-from app import redis_client
-from app.celery_worker import celery
+from app import redis_client, celery
 from app.config import Config
 from app.sources.base_source import BaseSource, get_indicator_type
 from app.utils.source_registry import SourceRegistry

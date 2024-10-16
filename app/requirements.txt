@@ -1,4 +1,5 @@
 Flask
+flask-sqlalchemy
 celery
 redis
 requests
@@ -6,3 +7,4 @@ ipaddress
 python-dotenv
 aiohttp
 asyncio
+cryptography

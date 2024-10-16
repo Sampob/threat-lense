@@ -18,3 +18,8 @@ class Config:
 
     # Cache expiration settings
     CACHE_EXPIRATION = 3600  # Cache expiration in seconds (1 hour)
+
+    # SQLAlchemy settings
+    SQLALCHEMY_DATABASE_URI = os.getenv("SQLALCHEMY_DATABASE_URI", "sqlite:///app_management.db")
+    SECRET_KEY = os.getenv("SECRET_KEY", "development-secret-key")
+    SQLALCHEMY_TRACK_MODIFICATIONS = False

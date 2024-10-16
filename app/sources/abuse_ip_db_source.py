@@ -8,10 +8,6 @@ logger = setup_logger(__name__, log_file="sources.log")
 class AbuseIpDbSource(BaseSource):
     def __init__(self):
         super().__init__(url="https://api.abuseipdb.com/api/v2/check", name="AbuseIPDB")
-        self.headers = {
-            "Accept": "application/json",
-            "Key": "" #self.api_key
-        }
     
     async def fetch_ipv4_intel(self, indicator: str) -> dict:
         return await self.fetch_ip_intel(indicator)
@@ -21,13 +17,18 @@ class AbuseIpDbSource(BaseSource):
     
     async def fetch_ip_intel(self, indicator: str) -> dict:
         logger.debug(f"Searching for indicator {indicator}")
+        
+        headers = {
+            "Accept": "application/json",
+            "Key": "" #self.api_key
+        }
         querystring = {
             "ipAddress": indicator,
             "maxAgeInDays": "90"
         }
         
         try:
-            response = await self.http_request(self.url, headers=self.headers, params=querystring)
+            response = await self.http_request(self.url, headers=headers, params=querystring)
         except aiohttp.ClientResponseError as e:
             logger.error(f"ClientResponseError: {str(e)}")
             return self.format_error(self.create_url(indicator), message=e.message, status_code=e.status)

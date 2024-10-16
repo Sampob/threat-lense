@@ -4,6 +4,7 @@ from app.config import Config
 from app.utils.logger import app_logger
 
 from flask import Flask
+from celery import Celery
 import redis
 
 # Create a Redis connection
@@ -12,6 +13,13 @@ redis_client = redis.StrictRedis(
     port=Config.REDIS_PORT,
     db=Config.REDIS_DB,
     decode_responses=True
+)
+
+celery = Celery(
+        __name__,
+        broker=Config.CELERY_BROKER_URL,
+        backend=Config.CELERY_RESULT_BACKEND,
+        include=["app.tasks"]
 )
 
 # Flask app factory
