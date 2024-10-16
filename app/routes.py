@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+import json
 
 from app.tasks import search_task
 from app.utils.indicator_type import is_valid_indicator
@@ -56,14 +57,21 @@ def configure_routes(app):
         elif task_result.state == "SUCCESS":
             response = {
                 "state": task_result.state,
-                "status": "Task completed successfully!",
-                "result": task_result.result
+                "status": "Task completed successfully!"
             }
+            if isinstance(task_result.result, str):
+                response["result"] = json.loads(task_result.result)
+            else:
+                response["result"] = task_result.result
         else:
             response = {
                 "state": task_result.state,
-                "result": task_result.result
+                "status": "Task completed successfully!"
             }
+            if isinstance(task_result.result, str):
+                response["result"] = json.loads(task_result.result)
+            else:
+                response["result"] = task_result.result
         return jsonify(response)
     
     @app.route("/search/<task_id>", methods=["GET"]) # WIP
