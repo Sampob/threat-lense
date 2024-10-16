@@ -38,7 +38,7 @@ def create_app():
     app.config.from_object(Config)
 
     # Register Flask routes
-    from app.routes import configure_routes
-    configure_routes(app)
+    from app.routes import main as main_blueprint
+    app.register_blueprint(main_blueprint)
 
     return app
