@@ -33,4 +33,3 @@ def setup_logger(name, log_file="app.log", level=logging.DEBUG):
 
 # Create a default logger for the application
 app_logger = setup_logger("app_logger")
-source_logger = setup_logger("source_logger", log_file="sources.log", level=logging.DEBUG)

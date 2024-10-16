@@ -4,16 +4,18 @@ from app.config import Config
 from app.sources.base_source import BaseSource
 from app.utils.source_registry import SourceRegistry
 from app.utils.cache import generate_cache_key, cache_results
-from app.utils.logger import app_logger
+from app.utils.logger import setup_logger
 
 import asyncio
 from asyncio import Semaphore
 
 semaphore = Semaphore(Config.MAX_CONCURRENT_REQUESTS)
 
+logger = setup_logger(__name__)
+
 @celery.task(bind=True)
 def search_task(self, indicator: str):
-    app_logger.info(f"Starting search task for {indicator}")
+    logger.info(f"Starting search task for {indicator}")
     return asyncio.run(main_task(indicator))
 
 async def main_task(indicator: str):
@@ -23,10 +25,10 @@ async def main_task(indicator: str):
     # Check for cached results
     cached_results = redis_client.get(cache_key)
     if cached_results:
-        app_logger.info(f"Cached result found for {indicator}, returning cached result")
+        logger.info(f"Cached result found for {indicator}, returning cached result")
         return handle_result(cached_results)
 
-    app_logger.info(f"No cached result found for {indicator}, proceeding to searching")
+    logger.info(f"No cached result found for {indicator}, proceeding to searching")
 
     sources = SourceRegistry.get_instance()
     
@@ -39,7 +41,7 @@ async def main_task(indicator: str):
             try:
                 return await source.fetch_intel(indicator)
             except Exception as e:
-                app_logger.error(f"Error fetching data from {source.get_name()}: {e}")
+                logger.error(f"Error fetching data from {source.get_name()}: {e}")
                 encountered_error = True
                 return None
     
@@ -51,14 +53,14 @@ async def main_task(indicator: str):
     
     # Cache results, ignore if error was encountered and empty results
     if encountered_error:
-        app_logger.info("Encountered an error, skipping caching")
+        logger.info("Encountered an error, skipping caching")
     elif results:
         cache_results(cache_key, results, expiration=Config.CACHE_EXPIRATION)
     else:
-        app_logger.info("Empty results, skipping caching")
+        logger.info("Empty results, skipping caching")
 
     return handle_result(results)
 
 def handle_result(results):
-    app_logger.info(f"Returning results: {results}")
+    logger.info(f"Returning results: {results}")
     return results

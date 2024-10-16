@@ -3,9 +3,11 @@ from datetime import datetime, timezone
 from app.tasks import search_task
 from app.utils.indicator_type import is_valid_indicator
 from app.utils.cache import fetch_from_cache
-from app.utils.logger import app_logger
+from app.utils.logger import setup_logger
 
 from flask import jsonify, request
+
+logger = setup_logger(__name__)
 
 def configure_routes(app):
     
@@ -24,7 +26,7 @@ def configure_routes(app):
     def search():
         indicator = request.json.get("indicator")
         
-        app_logger.info(f"Flask request for /search, with indicator: {indicator}")
+        logger.info(f"Flask request for /search, with indicator: {indicator}")
         if not is_valid_indicator(indicator):
             return bad_request_error(f"Invalid indicator {indicator}")
         # Start Celery task
@@ -39,7 +41,7 @@ def configure_routes(app):
     def get_task_status(task_id):
         task_result = search_task.AsyncResult(task_id)
         
-        app_logger.info(f"Flask request for /search/status, with task id: {task_id}")
+        logger.info(f"Flask request for /search/status, with task id: {task_id}")
         
         if task_result.state == "PENDING":
             response = {

@@ -1,13 +1,15 @@
 from .base_source import BaseSource
-from app.utils.logger import source_logger
+from app.utils.logger import setup_logger
 
 import aiohttp
+
+logger = setup_logger(__name__, log_file="sources.log")
 
 class AlienVaultSource(BaseSource):
     def __init__(self):
         super().__init__(url="https://otx.alienvault.com/api/v1/indicators/{}/{}/general/", name="Open Threat Exchange")
         self.headers = {
-            "X-OTX-API-KEY": self.key,
+            "X-OTX-API-KEY": "",
             "Content-Type": "application/json"
         }
     
@@ -27,7 +29,7 @@ class AlienVaultSource(BaseSource):
         return await self.make_request("file", hash)
     
     async def make_request(self, type: str, indicator: str):
-        source_logger.debug(f"{self.name} | Searching for indicator {indicator}")
+        logger.debug(f"{self.name} | Searching for indicator {indicator}")
         try:
             response = await self.http_request(self.url.format(type, indicator), headers=self.headers)
         except aiohttp.ClientResponseError as e:
@@ -38,7 +40,7 @@ class AlienVaultSource(BaseSource):
             return self.format_error(self.create_url(type, indicator), message=str(e), status_code=-1)
         except Exception as e:
             return self.format_error(self.create_url(type, indicator), message=str(e))
-        
+        logger.debug(f"{self.name} | results: {response}")
         return self.parse_intel(response)
     
     def create_url(self, type: str, indicator: str) -> str:

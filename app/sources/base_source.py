@@ -3,9 +3,11 @@ from datetime import datetime, timezone
 
 from app.utils.enums import IndicatorType, Verdict
 from app.utils.indicator_type import get_indicator_type
-from app.utils.logger import source_logger
+from app.utils.logger import setup_logger
 
 import aiohttp
+
+logger = setup_logger(__name__, log_file="sources.log")
 
 class BaseSource(abc.ABC):
     """
@@ -40,7 +42,9 @@ class BaseSource(abc.ABC):
                 return Verdict(2)
             elif value == 1:
                 return Verdict(1)
-            return Verdict(0)
+            elif value == 0:
+                return Verdict(0)
+            return Verdict(-1)
         else:
             return Verdict(-1)
         
@@ -94,15 +98,15 @@ class BaseSource(abc.ABC):
                         return await response.json()  # Assuming the response is JSON
 
             except aiohttp.ClientResponseError as e:
-                source_logger.error(f"URL: {url}, HTTP Error: {e.status} - {e.message}")
+                logger.error(f"URL: {url}, HTTP Error: {e.status} - {e.message}")
                 if e.status in {500, 502, 503, 504}:  # Retry on server errors
                     attempt += 1
-                    source_logger.error(f"Retrying... ({attempt}/{retries})")
+                    logger.error(f"Retrying... ({attempt}/{retries})")
                 else:
                     raise
             except aiohttp.ClientError as e:
                 # Handle other connection-related errors (timeouts, network failures)
-                source_logger.error(f"URL: {url}, Connection error: {str(e)}")
+                logger.error(f"URL: {url}, Connection error: {str(e)}")
                 raise
         
         raise RuntimeError(f"Failed after {retries} attempts")
@@ -129,7 +133,7 @@ class BaseSource(abc.ABC):
         elif indicator_type == IndicatorType.HASH:
             data = await self.fetch_hash_intel(indicator)
         else:
-            source_logger.warning(f"Invalid indicator type for indicator {indicator}")
+            logger.warning(f"Invalid indicator type for indicator {indicator}")
         return data
 
     @abc.abstractmethod
