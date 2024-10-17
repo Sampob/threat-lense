@@ -7,6 +7,7 @@ from app.utils.enums import IndicatorType, Verdict
 from app.utils.logger import setup_logger
 
 import aiohttp
+import xmltodict
 
 logger = setup_logger(__name__, log_file="sources.log")
 
@@ -149,7 +150,18 @@ class BaseSource(abc.ABC):
                 async with aiohttp.ClientSession(timeout=timeout_config) as session:
                     async with session.request(method, url, headers=headers, json=json, params=params) as response:
                         response.raise_for_status() # Raise an error for bad HTTP responses (4xx, 5xx)
-                        return await response.json() # Assuming the response is JSON
+                        
+                        content_type = response.headers.get("Content-Type")
+                        if "application/json" in content_type:
+                            data = await response.json() # Parse JSON response
+                            return data
+                        elif "text/txt" in content_type or "text/plain" in content_type or "application/xml" in content_type:
+                            text_data = await response.text() # Fetch as text
+                            data = xmltodict.parse(text_data) # Convert XML to dict
+                            return data
+                        else:
+                            logger.warning(f"Unsupported content type: {content_type}")
+                            return None
 
             except aiohttp.ClientResponseError as e:
                 logger.error(f"URL: {url}, HTTP Error: {e.status} - {e.message}")
