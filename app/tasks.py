@@ -1,9 +1,8 @@
-from app import redis_client
 from app.celery_worker import celery
 from app.config import Config
 from app.sources.base_source import BaseSource
 from app.utils.source_registry import SourceRegistry
-from app.utils.cache import generate_cache_key, cache_results
+from app.utils.cache import generate_cache_key, cache_results, fetch_from_cache
 from app.utils.indicator_type import get_indicator_type
 from app.utils.logger import setup_logger
 
@@ -24,7 +23,7 @@ async def main_task(indicator: str):
     cache_key = generate_cache_key(indicator)
 
     # Check for cached results
-    cached_results = redis_client.get(cache_key)
+    cached_results = fetch_from_cache(cache_key)
     if cached_results:
         logger.info(f"Cached result found for {indicator}, returning cached result")
         return handle_result(cached_results)

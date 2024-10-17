@@ -1,11 +1,20 @@
 import hashlib
 import json
 
-from app import redis_client
 from app.config import Config
 from app.utils.logger import setup_logger
 
+import redis
+
 logger = setup_logger(__name__)
+
+# Create a Redis connection
+redis_client = redis.StrictRedis(
+    host=Config.REDIS_HOST,
+    port=Config.REDIS_PORT,
+    db=Config.REDIS_DB,
+    decode_responses=True
+)
 
 def generate_cache_key(indicator) -> str:
     """ Generate a unique key based on query parameter. """

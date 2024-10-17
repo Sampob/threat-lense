@@ -2,19 +2,13 @@ import sys
 
 from app.config import Config
 from app.models import db, Source, APIKey
+from app.utils.cache import redis_client
+from app.utils.source_registry import SourceRegistry
 from app.utils.logger import app_logger
 
 from flask import Flask
 from flask_migrate import Migrate
-import redis
-
-# Create a Redis connection
-redis_client = redis.StrictRedis(
-    host=Config.REDIS_HOST,
-    port=Config.REDIS_PORT,
-    db=Config.REDIS_DB,
-    decode_responses=True
-)
+from redis.exceptions import TimeoutError as RedisTimeoutError
 
 migrate = Migrate()
 
@@ -24,7 +18,7 @@ def create_app():
         app_logger.debug(f"Testing connection to Redis at {Config.REDIS_HOST}:{Config.REDIS_PORT}")
         redis_client.ping()
         app_logger.debug("Connection successful, continuing initialization")
-    except redis.exceptions.TimeoutError as e:
+    except RedisTimeoutError as e:
         app_logger.error("Connection to Redis timed out, exiting")
         sys.exit()
     
@@ -47,10 +41,8 @@ def create_app():
     return app
 
 def seed_sources():
-    sources = [
-        {"name": "AbuseIPDB", "requires_api_key": True},
-        {"name": "Open Threat Exchange", "requires_api_key": True}
-    ]
+    source_instances = SourceRegistry.get_instance()
+    sources = [{"name": cls.get_name(), "requires_api_key": cls.requires_api_key} for cls in source_instances.values()]
     
     for source_data in sources:
         existing_source = Source.query.filter_by(name=source_data['name']).first()
