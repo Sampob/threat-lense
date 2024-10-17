@@ -9,23 +9,24 @@ class AlienVaultSource(BaseSource):
     def __init__(self):
         super().__init__(url="https://otx.alienvault.com/api/v1/indicators/{}/{}/general/", name="Open Threat Exchange", requires_api_key=True)
     
-    async def fetch_ipv4_intel(self, ip: str):
+    async def fetch_ipv4_intel(self, ip: str) -> dict:
         return await self.make_request("IPv4", ip)
     
-    async def fetch_ipv6_intel(self, ip: str):
+    async def fetch_ipv6_intel(self, ip: str) -> dict:
         return await self.make_request("IPv6", ip)
     
-    async def fetch_domain_intel(self, domain: str):
+    async def fetch_domain_intel(self, domain: str) -> dict:
         return await self.make_request("domain", domain)
     
-    async def fetch_url_intel(self, url: str):
+    async def fetch_url_intel(self, url: str) -> dict:
         return await self.make_request("url", url)
     
-    async def fetch_hash_intel(self, hash: str):
+    async def fetch_hash_intel(self, hash: str) -> dict:
         return await self.make_request("file", hash)
     
-    async def make_request(self, type: str, indicator: str):
+    async def make_request(self, type: str, indicator: str) -> dict:
         logger.debug(f"Searching for indicator {indicator}")
+        
         headers = {
             "X-OTX-API-KEY": self.api_key,
             "Content-Type": "application/json"
@@ -63,7 +64,7 @@ class AlienVaultSource(BaseSource):
         base_url = "https://otx.alienvault.com/indicator/{}/{}"
         return base_url.format(type, indicator)
     
-    def parse_intel(self, intel):
+    def parse_intel(self, intel: dict) -> dict:
         verdict = 0
         summary_string = ""
         
