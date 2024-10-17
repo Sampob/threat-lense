@@ -1,4 +1,4 @@
-from .base_source import BaseSource
+from app.sources.base_source import BaseSource
 from app.utils.logger import setup_logger
 
 import aiohttp
