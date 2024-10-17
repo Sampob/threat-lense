@@ -16,23 +16,29 @@ redis_client = redis.StrictRedis(
     decode_responses=True
 )
 
-def generate_cache_key(indicator) -> str:
+def generate_cache_key(indicator: str) -> str:
     """ Generate a unique key based on query parameter. """
     logger.debug(f"Creating cache key for {indicator}")
     return hashlib.md5(indicator.encode()).hexdigest()
 
-def fetch_from_cache(key) -> str:
+def fetch_from_cache(key: str) -> str:
     """ Fetch results from Redis. """
     logger.debug(f"Fetching results from Redis for key: {key}")
     return redis_client.get(key)
 
-def cache_results(key, data, expiration=Config.CACHE_EXPIRATION) -> None:
+def cache_results(key: str, data: str | dict, expiration: int=Config.CACHE_EXPIRATION) -> None:
     """ Cache results in Redis with expiration. """
     logger.debug(f"Caching data to redis with key: {key}")
     if isinstance(data, dict):
         data = json.dumps(data)
     redis_client.setex(key, expiration, data)
 
+def delete_from_cache(key: str) -> None:
+    """ Remove an entry from Redis """
+    logger.debug(f"Removing entry from Redis with key: {key}")
+    redis_client.delete(key)
+
 def flush_cache() -> None:
+    """ Remove all entries from the current Redis database. """
     logger.warning(f"FLUSHING current Redis database")
     redis_client.flushdb()

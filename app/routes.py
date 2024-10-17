@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 import json
 
 from app.utils.indicator_type import is_valid_indicator
-from app.utils.cache import cache_results, flush_cache
+from app.utils.cache import cache_results, delete_from_cache, flush_cache
 from app.utils.logger import setup_logger
 from app.models import Source, APIKey, db
 
@@ -22,6 +22,17 @@ def bad_request_error(error):
         "timestamp": str(datetime.now(timezone.utc)),
         "hint": "Ensure all required parameters are provided and valid."
     }), 400
+
+@main.errorhandler(404)
+def not_found_error(error):
+    return jsonify({
+        "error": "Not Found",
+        "message": f"The request could not be found: {error}",
+        "status_code": 404,
+        "path": request.path,
+        "timestamp": str(datetime.now(timezone.utc)),
+        "hint": "Ensure all required parameters are provided and valid."
+    }), 404
 
 @main.route("/search", methods=["GET"])
 def search():
@@ -80,10 +91,10 @@ def get_task_status(task_id):
 
 @main.route("/sources", methods=["GET"])
 def get_sources():
-    sources = Source.query.all()
-    
     logger.info(f"Flask request for /sources")
     
+    sources = Source.query.all()
+        
     result = []
     for source in sources:
         result.append({
@@ -95,22 +106,22 @@ def get_sources():
     
     return jsonify(result)
 
-@main.route("/sources/<source_name>", methods=["POST"])
-def set_api_key(source_name):
-    logger.info(f"Flask POST request for /sources/{source_name}")
+@main.route("/sources/<source_id>", methods=["POST"])
+def set_api_key(source_id):
+    logger.info(f"Flask POST request for /sources/{source_id}")
     
     api_key = request.json.get("api_key")
     if not api_key:
         return bad_request_error("Invalid parameter")
     
-    source = Source.query.filter_by(name=source_name).first()
+    source = Source.query.filter_by(name=source_id).first()
     if not source:
-        source = Source.query.filter_by(id=source_name).first()
+        source = Source.query.filter_by(id=source_id).first()
         if not source:
-            return jsonify({"error": "Source not found"}), 404
+            return not_found_error("Source not found")
 
     if not source.requires_api_key:
-        return jsonify({"error": "This source does not required an API key"}), 400
+        return bad_request_error("This source does not required an API key")
     
     api_key_entry = APIKey.query.filter_by(source_name=source.name).first()
     if not api_key_entry:
@@ -123,7 +134,33 @@ def set_api_key(source_name):
     
     logger.debug("Change in API keys, flushing cached results")
     flush_cache()
-    redis_key = f"api_key:{source_name}"
+    redis_key = f"api_key:{source.name}"
     cache_results(redis_key, api_key)
 
     return jsonify({"message": f"API key for {source.name} set successfully"}), 200
+
+@main.route("/sources/<source_id>", methods=["DELETE"])
+def delete_api_key(source_id):
+    logger.info(f"Flask DELETE request for /sources/{source_id}")
+    
+    source = Source.query.filter_by(name=source_id).first()
+    if not source:
+        source = Source.query.filter_by(id=source_id).first()
+        if not source:
+            return not_found_error("Source not found")
+
+    if not source.requires_api_key:
+        return bad_request_error("This source does not required an API key")
+    
+    api_key_entry = APIKey.query.filter_by(source_name=source.name).first()
+    
+    if not api_key_entry:
+        return not_found_error(f"No API key found for source {source.name}")
+    
+    db.session.delete(api_key_entry)
+    db.session.commit()
+    
+    redis_key = f"api_key:{source.name}"
+    delete_from_cache(redis_key)
+    
+    return jsonify({"message": f"API key for {source.name} deleted successfully"}), 200
