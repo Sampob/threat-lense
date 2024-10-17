@@ -1,7 +1,6 @@
 from datetime import datetime, timezone
 import json
 
-from app.tasks import search_task
 from app.utils.indicator_type import is_valid_indicator
 from app.utils.cache import fetch_from_cache
 from app.utils.logger import setup_logger
@@ -26,6 +25,7 @@ def bad_request_error(error):
 
 @main.route("/search", methods=["GET"])
 def search():
+    from app.tasks import search_task
     indicator = request.json.get("indicator")
     
     logger.info(f"Flask request for /search, with indicator: {indicator}")
@@ -41,6 +41,7 @@ def search():
 
 @main.route("/search/status/<task_id>", methods=["GET"])
 def get_task_status(task_id):
+    from app.tasks import search_task
     task_result = search_task.AsyncResult(task_id)
     
     logger.info(f"Flask request for /search/status, with task id: {task_id}")

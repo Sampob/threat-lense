@@ -50,7 +50,7 @@ class BaseSource(abc.ABC):
             return Verdict(-1)
     
     def fetch_api_key(self) -> str:
-        return ""
+        return fetch_api_key(self.get_name())
     
     def format_response(self, summary: str="", verdict: Verdict=Verdict.NONE, url: str="", data: dict={}) -> dict:
         return_dict = {
