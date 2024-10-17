@@ -34,13 +34,13 @@ class AbuseIpDbSource(BaseSource):
             return self.format_error(self.create_url(indicator), message=e.message, status_code=e.status)
         except aiohttp.ClientError as e:
             logger.error(f"ClientError: {str(e)}")
-            return self.format_error(self.create_url(indicator), message=str(e), status_code=-1)
+            return self.format_error(self.create_url(indicator), message=str(e))
         except RuntimeError as e:
             logger.error(f"RuntimeError: {str(e)}")
-            return self.format_error(self.create_url(indicator), message=str(e), status_code=-1)
+            return self.format_error(self.create_url(indicator), message=str(e))
         except TimeoutError as e:
             logger.error(f"TimeoutError: {str(e)}")
-            return self.format_error(self.create_url(type, indicator), message=str(e), status_code=-1)
+            return self.format_error(self.create_url(type, indicator), message=str(e))
         except Exception as e:
             logger.error(f"Exception: {str(e)}")
             return self.format_error(self.create_url(indicator), message=str(e))

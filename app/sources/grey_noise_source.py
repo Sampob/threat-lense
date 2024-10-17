@@ -29,18 +29,18 @@ class GreyNoiseSource(BaseSource):
         except aiohttp.ClientResponseError as e:
             if e.status == 429:
                 logger.error(f"ClientResponseError GreyNoise rate-limit exceeded: {str(e)}")
-                return self.format_response(summary=e.message, verdict=-1, url=self.create_url(indicator), data={})
+                return self.format_response(summary=e.message, verdict=-100, url=self.create_url(indicator), data={})
             logger.error(f"ClientResponseError: {str(e)}")
             return self.format_error(self.create_url(indicator), message=e.message, status_code=e.status)
         except aiohttp.ClientError as e:
             logger.error(f"ClientError: {str(e)}")
-            return self.format_error(self.create_url(indicator), message=str(e), status_code=-1)
+            return self.format_error(self.create_url(indicator), message=str(e))
         except RuntimeError as e:
             logger.error(f"RuntimeError: {str(e)}")
-            return self.format_error(self.create_url(indicator), message=str(e), status_code=-1)
+            return self.format_error(self.create_url(indicator), message=str(e))
         except TimeoutError as e:
             logger.error(f"TimeoutError: {str(e)}")
-            return self.format_error(self.create_url(type, indicator), message=str(e), status_code=-1)
+            return self.format_error(self.create_url(type, indicator), message=str(e))
         except Exception as e:
             logger.error(f"Exception: {str(e)}")
             return self.format_error(self.create_url(indicator), message=str(e))

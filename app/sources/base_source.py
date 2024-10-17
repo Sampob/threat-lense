@@ -46,6 +46,8 @@ class BaseSource(abc.ABC):
                 return Verdict(1)
             elif value == 0:
                 return Verdict(0)
+            elif value == -100:
+                return Verdict(-100)
             return Verdict(-1)
         else:
             return Verdict(-1)
@@ -77,10 +79,10 @@ class BaseSource(abc.ABC):
         }
         return return_dict
     
-    def format_error(self, url: str="", message: str="", status_code: int=-1, timestamp: datetime=datetime.now(timezone.utc)) -> dict:
+    def format_error(self, url: str="", message: str="", status_code: int=None, timestamp: datetime=datetime.now(timezone.utc)) -> dict:
         return_dict = {
             "summary": "error",
-            "verdict": self.get_verdict(-1).name,
+            "verdict": self.get_verdict(-100).name,
             "url": url,
             "data": {
                 "message": message,
@@ -163,6 +165,10 @@ class BaseSource(abc.ABC):
         else:
             logger.warning(f"Invalid indicator type for indicator {indicator}")
         return data
+    
+    @abc.abstractmethod
+    def create_url(self, indicator: str) -> str:
+        raise NotImplementedError("Subclasses should implement this method")
 
     @abc.abstractmethod
     async def fetch_ipv4_intel(self, indicator: str):
