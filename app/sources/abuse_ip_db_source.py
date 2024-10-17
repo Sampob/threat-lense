@@ -46,7 +46,7 @@ class AbuseIpDbSource(BaseSource):
             return self.format_error(self.create_url(indicator), message=str(e))
         return self.parse_intel(response)
     
-    async def fetch_domain_intel(self, indicator):
+    async def fetch_domain_intel(self, indicator: str):
         return None
     async def fetch_url_intel(self, indicator: str):
         return None
