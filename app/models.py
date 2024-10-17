@@ -18,7 +18,7 @@ def fetch_api_key(name):
     api_key_entry = APIKey.query.filter_by(source_name=name).first()
     
     if api_key_entry:
-        return api_key_entry.api_key
+        return api_key_entry.get_key()
     else:
         raise ValueError(f"No API key found for source '{name}'")
 
