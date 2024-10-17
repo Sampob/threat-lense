@@ -11,13 +11,13 @@ class IndicatorType(Enum):
 class Verdict(Enum):
     ERROR = -100
     NONE = -1
-    GOOD = 0
+    BENIGN = 0
     SUSPICIOUS = 1
     MALICIOUS = 2
 
 class VerdictColors(Enum):
     ERROR = (255, 0, 255)       # Pink
     NONE = (190, 190, 190)      # Grey
-    GOOD = (0, 128, 0)          # Green
+    BENIGN = (0, 128, 0)          # Green
     SUSPICIOUS = (255, 175, 0)  # Yellow
     MALICIOUS = (255, 0, 0)     # Red

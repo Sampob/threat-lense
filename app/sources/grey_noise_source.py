@@ -62,10 +62,10 @@ class GreyNoiseSource(BaseSource):
     def parse_intel(self, intel) -> dict:
         verdict = 0
 
-        if intel.get("noise"):
-            verdict = 1
         if intel.get("classification") == "malicious":
             verdict = 2
+        elif intel.get("noise"):
+            verdict = 1
         
         summary_string = f"Classification: {intel.get("classification")}, last seen {intel.get("last_seen")}"
         
