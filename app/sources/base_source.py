@@ -53,6 +53,12 @@ class BaseSource(abc.ABC):
             return Verdict(-1)
     
     def fetch_api_key(self) -> str:
+        """
+        Fetch API key from Redis database if available. 
+        If API key not in Redis, attempts to fetch it from the database and cache it on Redis for future use.
+        
+        :return: API key in string format
+        """
         name = self.get_name()
         redis_key = f"api_key:{name}"
         logger.info(f"Fetching API key with value {redis_key}")
@@ -70,7 +76,23 @@ class BaseSource(abc.ABC):
             else:
                 raise ValueError(f"No API key found in the database for {name}")
     
-    def format_response(self, summary: str="", verdict: Verdict=Verdict.NONE, url: str="", data: dict={}) -> dict:
+    def format_response(self, summary: str="", verdict: int=-1, url: str="", data: dict={}) -> dict:
+        """
+        Formats response in unified way.
+        {
+            "summary": "summary",
+            "verdict": "VERDICT NAME",
+            "url": "url",
+            "data": {}
+        }
+        
+        :param summary: Most important results, glanced over
+        :param verdict: Verdict of results, benign, suspicious or malicious
+        :param url: URL to the service's result
+        :param data: Raw data from the source
+        
+        :return: Dict of full formatted response
+        """
         return_dict = {
             "summary": summary,
             "verdict": self.get_verdict(verdict).name,
@@ -80,6 +102,16 @@ class BaseSource(abc.ABC):
         return return_dict
     
     def format_error(self, url: str="", message: str="", status_code: int=None, timestamp: datetime=datetime.now(timezone.utc)) -> dict:
+        """
+        Formats error messages in unified way. 
+        
+        :param url: URL to the service's result
+        :param message: Error message explaining what happened to cause the error
+        :param status_code: HTTP status code for the error, default None
+        :param timestamp: When the error occurred, defaults to datetime.now(timezone.utc)
+        
+        :return: Dict of error summary
+        """
         return_dict = {
             "summary": "error",
             "verdict": self.get_verdict(-100).name,
@@ -116,12 +148,12 @@ class BaseSource(abc.ABC):
                 # Make the request
                 async with aiohttp.ClientSession(timeout=timeout_config) as session:
                     async with session.request(method, url, headers=headers, json=json, params=params) as response:
-                        response.raise_for_status()  # Raise an error for bad HTTP responses (4xx, 5xx)
-                        return await response.json()  # Assuming the response is JSON
+                        response.raise_for_status() # Raise an error for bad HTTP responses (4xx, 5xx)
+                        return await response.json() # Assuming the response is JSON
 
             except aiohttp.ClientResponseError as e:
                 logger.error(f"URL: {url}, HTTP Error: {e.status} - {e.message}")
-                if e.status in {500, 502, 503, 504}:  # Retry on server errors
+                if e.status in {500, 502, 503, 504}: # Retry on server errors
                     attempt += 1
                     logger.error(f"Retrying... ({attempt}/{retries})")
                 else:
