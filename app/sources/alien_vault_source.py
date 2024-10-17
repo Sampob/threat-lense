@@ -44,7 +44,13 @@ class AlienVaultSource(BaseSource):
             return self.format_error(self.create_url(type, indicator), message=str(e))
         except TimeoutError as e:
             logger.error(f"TimeoutError: {str(e)}")
-            return self.format_error(self.create_url(type, indicator), message=str(e))
+            error_message = str(e)
+            if hasattr(e, "message"):
+                error_message = str(e.message)
+            status = None
+            if hasattr(e, "status"):
+                status = e.status
+            return self.format_error(self.create_url(type, indicator), message=str(e), status_code=status)
         except Exception as e:
             error_message = str(e)
             if hasattr(e, "message"):
@@ -59,10 +65,11 @@ class AlienVaultSource(BaseSource):
     
     def parse_intel(self, intel):
         verdict = 0
+        summary_string = ""
         
         # Simple analysis to determine possible suspicious activity
         pulse_count = intel.get("pulse_info", {}).get("count", 0)
-        summary_string = f"No. of pulses: {pulse_count}"
+        pulse_count_string = f"Number of pulses: {pulse_count}"
         if pulse_count:
             if pulse_count > 10:
                 verdict = 2
@@ -71,7 +78,8 @@ class AlienVaultSource(BaseSource):
         if len(intel.get("validation", [])) > 0:
             if verdict > 0:
                 verdict = 1
-            summary_string = f"Accepted whitelist on indicator. No. of pulses: {pulse_count}"
+            summary_string = f"Accepted whitelist on indicator. "
+        summary_string += pulse_count_string
         
         formatted_intel = self.format_response(summary=summary_string, verdict=verdict, url=self.create_url(intel.get("type"), intel.get("indicator")), data=intel)
         
