@@ -2,8 +2,8 @@ import abc
 from datetime import datetime, timezone
 
 from app.models import fetch_api_key
+from app.utils.cache import fetch_from_cache, cache_results
 from app.utils.enums import IndicatorType, Verdict
-from app.utils.indicator_type import get_indicator_type
 from app.utils.logger import setup_logger
 
 import aiohttp
@@ -15,9 +15,10 @@ class BaseSource(abc.ABC):
     Base class for all API sources. Every source should implement this. Unified handling of sources with different features. 
     """
     
-    def __init__(self, url: str="", name: str=""):
+    def __init__(self, url: str="", name: str="", requires_api_key: bool=False):
         self.url = url
         self.name = name
+        self.requires_api_key = requires_api_key
     
     def get_name(self) -> str:
         """
@@ -50,7 +51,22 @@ class BaseSource(abc.ABC):
             return Verdict(-1)
     
     def fetch_api_key(self) -> str:
-        return fetch_api_key(self.get_name())
+        name = self.get_name()
+        redis_key = f"api_key:{name}"
+        logger.info(f"Fetching API key with value {redis_key}")
+        cached_api_key = fetch_from_cache(redis_key)
+        if cached_api_key:
+            logger.info(f"API key found from redis, with key {redis_key}")
+            api_key = cached_api_key
+            return api_key
+        else:
+            api_key = fetch_api_key(name)
+            if api_key:
+                logger.info(f"API key found from database, storing to redis")
+                cache_results(redis_key, api_key)
+                return api_key
+            else:
+                raise ValueError(f"No API key found in the database for {name}")
     
     def format_response(self, summary: str="", verdict: Verdict=Verdict.NONE, url: str="", data: dict={}) -> dict:
         return_dict = {
@@ -90,6 +106,7 @@ class BaseSource(abc.ABC):
         """
         attempt = 0
         while attempt < retries:
+            logger.debug(f"Sending request to {url}, attempt {attempt}/{retries}")
             try:
                 # Set timeout configuration
                 timeout_config = aiohttp.ClientTimeout(total=timeout)
@@ -111,10 +128,13 @@ class BaseSource(abc.ABC):
                 # Handle other connection-related errors (timeouts, network failures)
                 logger.error(f"URL: {url}, Connection error: {str(e)}")
                 raise
+            except TimeoutError as e:
+                logger.error(f"Request to {url} timed out after {timeout} seconds")
+                raise
         
         raise RuntimeError(f"Failed after {retries} attempts")
     
-    async def fetch_intel(self, indicator: str) -> dict:
+    async def fetch_intel(self, indicator: str, indicator_type: IndicatorType=IndicatorType.UNKNOWN) -> dict | None:
         """
         Categorizes the indicator and calls the correct method to fetch IOC intel. 
         
@@ -122,9 +142,13 @@ class BaseSource(abc.ABC):
         
         :return: Enriched IOC data from the source
         """
-        indicator_type = get_indicator_type(indicator)
-        logger.info(f"Indicator type: {indicator_type.name}")
-        
+        if self.requires_api_key:
+            try:
+                self.api_key = self.fetch_api_key()
+            except ValueError as e:
+                logger.error(e)
+                return None
+                
         data = None
         if indicator_type == IndicatorType.IPv4:
             data = await self.fetch_ipv4_intel(indicator)

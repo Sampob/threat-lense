@@ -7,7 +7,7 @@ logger = setup_logger(__name__, log_file="sources.log")
 
 class AlienVaultSource(BaseSource):
     def __init__(self):
-        super().__init__(url="https://otx.alienvault.com/api/v1/indicators/{}/{}/general/", name="Open Threat Exchange")
+        super().__init__(url="https://otx.alienvault.com/api/v1/indicators/{}/{}/general/", name="Open Threat Exchange", requires_api_key=True)
     
     async def fetch_ipv4_intel(self, ip: str):
         return await self.make_request("IPv4", ip)
@@ -27,9 +27,10 @@ class AlienVaultSource(BaseSource):
     async def make_request(self, type: str, indicator: str):
         logger.debug(f"Searching for indicator {indicator}")
         headers = {
-            "X-OTX-API-KEY": self.fetch_api_key(),
+            "X-OTX-API-KEY": self.api_key,
             "Content-Type": "application/json"
         }
+        
         try:
             response = await self.http_request(self.url.format(type, indicator), headers=headers)
         except aiohttp.ClientResponseError as e:
@@ -41,9 +42,15 @@ class AlienVaultSource(BaseSource):
         except RuntimeError as e:
             logger.error(f"RuntimeError: {str(e)}")
             return self.format_error(self.create_url(type, indicator), message=str(e), status_code=-1)
+        except TimeoutError as e:
+            logger.error(f"TimeoutError: {str(e)}")
+            return self.format_error(self.create_url(type, indicator), message=str(e), status_code=-1)
         except Exception as e:
-            logger.error(f"Exception: {str(e)}")
-            return self.format_error(self.create_url(type, indicator), message=str(e))
+            error_message = str(e)
+            if hasattr(e, "message"):
+                error_message = str(e.message)
+            logger.error(f"Exception: {error_message}")
+            return self.format_error(self.create_url(type, indicator), message=error_message)
         return self.parse_intel(response)
     
     def create_url(self, type: str, indicator: str) -> str:
@@ -54,7 +61,6 @@ class AlienVaultSource(BaseSource):
         verdict = 0
         
         # Simple analysis to determine possible suspicious activity
-        
         pulse_count = intel.get("pulse_info", {}).get("count", 0)
         summary_string = f"No. of pulses: {pulse_count}"
         if pulse_count:

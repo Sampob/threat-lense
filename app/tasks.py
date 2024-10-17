@@ -1,9 +1,10 @@
 from app import redis_client
 from app.celery_worker import celery
 from app.config import Config
-from app.sources.base_source import BaseSource, get_indicator_type
+from app.sources.base_source import BaseSource
 from app.utils.source_registry import SourceRegistry
 from app.utils.cache import generate_cache_key, cache_results
+from app.utils.indicator_type import get_indicator_type
 from app.utils.logger import setup_logger
 
 import asyncio
@@ -35,10 +36,13 @@ async def main_task(indicator: str):
     # List to store results
     results = []
 
+    indicator_type = get_indicator_type(indicator)
+    logger.info(f"Indicator type: {indicator_type.name}")
+
     async def query_source(source: BaseSource):
         async with semaphore:
             try:
-                response = await source.fetch_intel(indicator)
+                response = await source.fetch_intel(indicator, indicator_type)
                 return response
             except Exception as e:
                 logger.error(f"Error fetching data from {source.get_name()}: {e}")

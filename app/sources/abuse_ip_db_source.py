@@ -7,7 +7,7 @@ logger = setup_logger(__name__, log_file="sources.log")
 
 class AbuseIpDbSource(BaseSource):
     def __init__(self):
-        super().__init__(url="https://api.abuseipdb.com/api/v2/check", name="AbuseIPDB")
+        super().__init__(url="https://api.abuseipdb.com/api/v2/check", name="AbuseIPDB", requires_api_key=True)
     
     async def fetch_ipv4_intel(self, indicator: str) -> dict:
         return await self.fetch_ip_intel(indicator)
@@ -15,12 +15,12 @@ class AbuseIpDbSource(BaseSource):
     async def fetch_ipv6_intel(self, indicator: str) -> dict:
         return await self.fetch_ip_intel(indicator)
     
-    async def fetch_ip_intel(self, indicator: str) -> dict:
+    async def fetch_ip_intel(self, indicator: str) -> dict: 
         logger.debug(f"Searching for indicator {indicator}")
         
         headers = {
             "Accept": "application/json",
-            "Key": self.fetch_api_key()
+            "Key": self.api_key
         }
         querystring = {
             "ipAddress": indicator,
@@ -38,6 +38,9 @@ class AbuseIpDbSource(BaseSource):
         except RuntimeError as e:
             logger.error(f"RuntimeError: {str(e)}")
             return self.format_error(self.create_url(indicator), message=str(e), status_code=-1)
+        except TimeoutError as e:
+            logger.error(f"TimeoutError: {str(e)}")
+            return self.format_error(self.create_url(type, indicator), message=str(e), status_code=-1)
         except Exception as e:
             logger.error(f"Exception: {str(e)}")
             return self.format_error(self.create_url(indicator), message=str(e))
@@ -64,10 +67,12 @@ class AbuseIpDbSource(BaseSource):
         elif abuse_confidence_score > 0:
             verdict = 1
         
-        if verdict == 0 and intel.get("data", {}).get("totalReports", 0) > 0:
+        total_reports = intel.get("data", {}).get("totalReports", 0)
+        
+        if verdict == 0 and total_reports > 0:
             verdict = 1
         
-        summary_string = f'Confidence: {abuse_confidence_score}'
+        summary_string = f"Confidence: {abuse_confidence_score}, total reports: {total_reports}"
         
         formatted_intel = self.format_response(summary=summary_string, verdict=verdict, url=self.create_url(intel.get("data", {}).get("ipAddress", "")), data=intel.get("data"))
         
