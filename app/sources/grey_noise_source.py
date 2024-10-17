@@ -31,7 +31,7 @@ class GreyNoiseSource(BaseSource):
                 logger.error(f"ClientResponseError GreyNoise rate-limit exceeded: {str(e)}")
                 return self.format_response(summary=e.message, verdict=-100, url=self.create_url(indicator), data={})
             elif e.status == 404:
-                logger.info(f"ClientResponseError indicator {indicator} not found from GreyNoise")
+                logger.error(f"ClientResponseError indicator {indicator} not found from GreyNoise")
                 return self.format_response(summary="IP not observed scanning the internet", verdict=0, url=self.create_url(indicator), data=e.text)
             logger.error(f"ClientResponseError: {str(e)}")
             return self.format_error(self.create_url(indicator), message=e.message, status_code=e.status)

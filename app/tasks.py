@@ -15,7 +15,7 @@ logger = setup_logger(__name__)
 
 @celery.task(bind=True)
 def search_task(self, indicator: str):
-    logger.info(f"Starting search task for {indicator}")
+    logger.debug(f"Starting search task for {indicator}")
     return asyncio.run(main_task(indicator))
 
 async def main_task(indicator: str):
@@ -25,10 +25,10 @@ async def main_task(indicator: str):
     # Check for cached results
     cached_results = fetch_from_cache(cache_key)
     if cached_results:
-        logger.info(f"Cached result found for {indicator}, returning cached result")
+        logger.debug(f"Cached result found for {indicator}, returning cached result")
         return handle_result(cached_results)
 
-    logger.info(f"No cached result found for {indicator}, proceeding to searching")
+    logger.debug(f"No cached result found for {indicator}, proceeding to searching")
 
     sources = SourceRegistry.get_instance()
     
@@ -36,7 +36,7 @@ async def main_task(indicator: str):
     results = []
 
     indicator_type = get_indicator_type(indicator)
-    logger.info(f"Indicator type: {indicator_type.name}")
+    logger.debug(f"Indicator type: {indicator_type.name}")
 
     async def query_source(source: BaseSource):
         async with semaphore:
@@ -64,7 +64,7 @@ async def main_task(indicator: str):
             encountered_error = True
             break
     
-    logger.info("Adding additional data to results")
+    logger.debug("Adding additional data to results")
     final_result = {
         "indicator": indicator,
         "type": get_indicator_type(indicator).name,

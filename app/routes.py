@@ -36,12 +36,13 @@ def not_found_error(error):
 
 @main.route("/search", methods=["GET"])
 def search():
+    logger.debug(f"Flask request for /search, with indicator: {indicator}")
+    
     from app.tasks import search_task
     indicator = request.json.get("indicator")
     if not indicator:
         return bad_request_error("Invalid parameter")
     
-    logger.info(f"Flask request for /search, with indicator: {indicator}")
     if not is_valid_indicator(indicator):
         return bad_request_error(f"Invalid parameter 'indicator': {indicator}")
     # Start Celery task
@@ -54,10 +55,10 @@ def search():
 
 @main.route("/search/status/<task_id>", methods=["GET"])
 def get_task_status(task_id):
+    logger.debug(f"Flask request for /search/status, with task id: {task_id}")
+
     from app.tasks import search_task
-    task_result = search_task.AsyncResult(task_id)
-    
-    logger.info(f"Flask request for /search/status, with task id: {task_id}")
+    task_result = search_task.AsyncResult(task_id)    
     
     if task_result.state == "PENDING":
         response = {
@@ -91,7 +92,7 @@ def get_task_status(task_id):
 
 @main.route("/sources", methods=["GET"])
 def get_sources():
-    logger.info(f"Flask request for /sources")
+    logger.debug(f"Flask request for /sources")
     
     sources = Source.query.all()
         
@@ -108,7 +109,7 @@ def get_sources():
 
 @main.route("/sources/<source_id>", methods=["POST"])
 def set_api_key(source_id):
-    logger.info(f"Flask POST request for /sources/{source_id}")
+    logger.debug(f"Flask POST request for /sources/{source_id}")
     
     api_key = request.json.get("api_key")
     if not api_key:
@@ -141,7 +142,7 @@ def set_api_key(source_id):
 
 @main.route("/sources/<source_id>", methods=["DELETE"])
 def delete_api_key(source_id):
-    logger.info(f"Flask DELETE request for /sources/{source_id}")
+    logger.debug(f"Flask DELETE request for /sources/{source_id}")
     
     source = Source.query.filter_by(name=source_id).first()
     if not source:
@@ -157,9 +158,11 @@ def delete_api_key(source_id):
     if not api_key_entry:
         return not_found_error(f"No API key found for source {source.name}")
     
+    logger.debug("Deleting API key from database")
     db.session.delete(api_key_entry)
     db.session.commit()
     
+    logger.debug("Deleting API key from cache")
     redis_key = f"api_key:{source.name}"
     delete_from_cache(redis_key)
     

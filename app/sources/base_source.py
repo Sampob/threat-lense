@@ -61,16 +61,16 @@ class BaseSource(abc.ABC):
         """
         name = self.get_name()
         redis_key = f"api_key:{name}"
-        logger.info(f"Fetching API key with value {redis_key}")
+        logger.debug(f"Fetching API key with value {redis_key}")
         cached_api_key = fetch_from_cache(redis_key)
         if cached_api_key:
-            logger.info(f"API key found from redis, with key {redis_key}")
+            logger.debug(f"API key found from redis, with key {redis_key}")
             api_key = cached_api_key
             return api_key
         else:
             api_key = fetch_api_key(name)
             if api_key:
-                logger.info(f"API key found from database, storing to redis")
+                logger.debug(f"API key found from database, storing to redis")
                 cache_results(redis_key, api_key)
                 return api_key
             else:
