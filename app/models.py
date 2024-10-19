@@ -7,10 +7,12 @@ db = SQLAlchemy()
 
 # Encrypt/Decrypt helper
 def encrypt_data(data):
+    """ Encrypt given data. Secret key is used to encrypt. """
     cipher_suite = Fernet(Config.SECRET_KEY.encode("utf-8"))
     return cipher_suite.encrypt(data.encode("utf-8")).decode("utf-8")
 
 def decrypt_data(data):
+    """ Decrypt given data. Encrypted data must have been encrypted using the configured secret key. """
     cipher_suite = Fernet(Config.SECRET_KEY.encode("utf-8"))
     return cipher_suite.decrypt(data.encode("utf-8")).decode("utf-8")
 

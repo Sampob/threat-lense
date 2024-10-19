@@ -3,7 +3,14 @@ from app.config import Config
 
 from celery import Celery
 
-def make_celery(app):
+def make_celery(app) -> Celery:
+    """
+    Create celery instance.
+
+    :param app: Flask application instance
+
+    :return: Created celery
+    """
     celery = Celery(
         app.import_name,
         broker=Config.CELERY_BROKER_URL,

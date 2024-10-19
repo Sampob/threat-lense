@@ -1,8 +1,16 @@
 import logging
 import os
 
-def setup_logger(name, log_file="app.log", level=logging.INFO):
-    """ Function to set up a logger. """
+def setup_logger(name: str, log_file: str="app.log", level=logging.INFO) -> logging.Logger:
+    """
+    Function to set up a logger.
+    
+    :param name: Name used to differentiate logs
+    :param log_file: Filename logs are stored to, inside directory 'logs'
+    :param level: Logging level used for the logger
+
+    :return: Logger instance used to create logs entries
+    """
     
     # Create logs directory if it doesn"t exist
     if not os.path.exists("logs"):

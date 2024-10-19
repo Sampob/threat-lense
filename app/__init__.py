@@ -13,7 +13,7 @@ from redis.exceptions import TimeoutError as RedisTimeoutError
 migrate = Migrate()
 
 # Flask app factory
-def create_app():
+def create_app() -> Flask:
     try:
         app_logger.debug(f"Testing connection to Redis at {Config.REDIS_HOST}:{Config.REDIS_PORT}")
         redis_client.ping()
