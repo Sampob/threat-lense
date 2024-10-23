@@ -11,7 +11,7 @@ class Config:
 
     # Celery settings
     CELERY_BROKER_URL = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}"
-    CELERY_RESULT_BACKEND = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}"
+    result_backend = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}"
     
     # Concurrency
     MAX_CONCURRENT_REQUESTS = 5
