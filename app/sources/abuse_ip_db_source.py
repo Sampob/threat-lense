@@ -46,17 +46,17 @@ class AbuseIpDbSource(BaseSource):
             return self.format_error(self.create_url(indicator), message=str(e))
         return self.parse_intel(response)
     
-    def fetch_domain_intel(self, indicator: str):
+    async def fetch_domain_intel(self, indicator: str):
         return None
-    def fetch_url_intel(self, indicator: str):
+    async def fetch_url_intel(self, indicator: str):
         return None
-    def fetch_hash_intel(self, indicator: str):
+    async def fetch_hash_intel(self, indicator: str):
         return None
     
     def create_url(self, indicator: str) -> str:
         return f"https://www.abuseipdb.com/check/{indicator}"
     
-    def parse_intel(self, intel) -> dict:
+    def parse_intel(self, intel: dict) -> dict:
         verdict = 0
         
         abuse_confidence_score = intel.get("data", {}).get("abuseConfidenceScore", 0)

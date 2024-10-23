@@ -36,7 +36,7 @@ class ThreatMinerSource(BaseSource):
             
         return self.parse_intel(response)
     
-    def fetch_url_intel(self, indicator: str):
+    async def fetch_url_intel(self, indicator: str):
         return None
     
     def create_url(self, indicator) -> str:

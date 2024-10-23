@@ -35,13 +35,13 @@ def not_found_error(error):
     }), 404
 
 @main.route("/search", methods=["GET"])
-def search():
-    logger.debug(f"Flask request for /search, with indicator: {indicator}")
-    
+def search():    
     from app.tasks import search_task
     indicator = request.json.get("indicator")
     if not indicator:
         return bad_request_error("Invalid parameter")
+    
+    logger.debug(f"Flask request for /search, with indicator: {indicator}")
     
     if not is_valid_indicator(indicator):
         return bad_request_error(f"Invalid parameter 'indicator': {indicator}")

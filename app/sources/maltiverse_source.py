@@ -14,13 +14,13 @@ class MaltiverseSource(BaseSource):
     async def fetch_ipv4_intel(self, ip: str) -> dict:
         return await self.make_request("ip", ip)
     
-    async def fetch_domain_intel(self, domain: str):
+    async def fetch_domain_intel(self, domain: str) -> dict:
         return await self.make_request("hostname", domain)
     
-    async def fetch_url_intel(self, url: str):
+    async def fetch_url_intel(self, url: str) -> dict:
         return await self.make_request("url", url)
     
-    async def fetch_hash_intel(self, hash: str):
+    async def fetch_hash_intel(self, hash: str) -> dict:
         # Supports SHA256 (64), SHA1 (40) and MD5 (32)
         if len(hash) == 64: # SHA256
             return await self.make_request("sample", hash)
@@ -28,9 +28,6 @@ class MaltiverseSource(BaseSource):
             return await self.make_request("sha1", hash)
         elif len(hash) == 32: # MD5
             return await self.make_request("md5", hash)
-        return None
-    
-    def fetch_ipv6_intel(self, indicator: str):
         return None
     
     async def make_request(self, type: str, indicator: str) -> dict:
@@ -71,11 +68,14 @@ class MaltiverseSource(BaseSource):
             return self.format_error(self.create_url(indicator), message=str(e))
         return self.parse_intel(response)
     
+    async def fetch_ipv6_intel(self, indicator: str):
+        return None
+    
     def create_url(self, indicator: str) -> str:
         base_url = "https://maltiverse.com/intelligence/search;query={}"
         return base_url.format(indicator)
     
-    def parse_intel(self, intel: dict):
+    def parse_intel(self, intel: dict) -> dict:
         verdict = 0
         
         indicator_fields = ["ip_addr", "hostname", "url", "sha256"]

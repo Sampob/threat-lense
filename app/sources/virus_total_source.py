@@ -25,7 +25,7 @@ class VirusTotalSource(BaseSource):
         url = f"{self.url}urls/{url_ioc}"
         return await self.fetch_intel_by_url(url, url_ioc)
     
-    async def fetch_hash_intel(self, hash):
+    async def fetch_hash_intel(self, hash: str) -> dict:
         url = f"{self.url}files/{hash}"
         return await self.fetch_intel_by_url(url, hash)
     
@@ -65,7 +65,7 @@ class VirusTotalSource(BaseSource):
             return self.parse_intel(response)
         return response
     
-    def create_url(self, indicator):
+    def create_url(self, indicator: str):
         return f"https://www.virustotal.com/gui/search/{indicator}"
     
     def parse_intel(self, intel: dict) -> dict:
