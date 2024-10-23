@@ -34,6 +34,10 @@ def not_found_error(error):
         "hint": "Ensure all required parameters are provided and valid."
     }), 404
 
+@main.route("/health", methods=["GET"])
+def health_check():
+    return jsonify({"status": "running"}), 200
+
 @main.route("/search", methods=["GET"])
 def search():    
     from app.tasks import search_task

@@ -6,5 +6,6 @@ instance
 
 .*
 *.md
+!README.md
 
 test.py
