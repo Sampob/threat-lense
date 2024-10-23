@@ -24,7 +24,7 @@ class ThreatMinerSource(BaseSource):
         return await self.fetch_intel_by_url(search_url)
     
     async def fetch_intel_by_url(self, url: str) -> dict:
-        response = await self.http_request(url)
+        response = await self.http_request(url, timeout=30)
 
         # Bad API design
         # HTTP Status code 200 --> Response "status_code" contains the actual status, in str format
