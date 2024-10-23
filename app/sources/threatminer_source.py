@@ -24,7 +24,7 @@ class ThreatMinerSource(BaseSource):
         return await self.fetch_intel_by_url(search_url)
     
     async def fetch_intel_by_url(self, url: str) -> dict:
-        response = self.http_request(url)
+        response = await self.http_request(url)
 
         # Bad API design
         # HTTP Status code 200 --> Response "status_code" contains the actual status, in str format
@@ -40,7 +40,7 @@ class ThreatMinerSource(BaseSource):
         return None
     
     def create_url(self, indicator) -> str:
-        return None
+        return "https://www.threatminer.org/index.php"
     
     def parse_intel(self, intel: dict) -> dict:
         verdict = 0
@@ -51,6 +51,6 @@ class ThreatMinerSource(BaseSource):
             summary_string = f"Appears in {results_size} reports"
             verdict = 1
         
-        formatted_intel = self.format_response(summary=summary_string, verdict=verdict, url=self.create_url(""), data=intel.get("responses"))
+        formatted_intel = self.format_response(summary=summary_string, verdict=verdict, url=self.create_url(""), data=intel.get("results"))
         
         return formatted_intel

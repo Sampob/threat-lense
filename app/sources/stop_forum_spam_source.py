@@ -7,7 +7,7 @@ logger = setup_logger(__name__, log_file="sources.log")
 
 class StopForumSpamSource(BaseSource):
     def __init__(self):
-        super().__init__(url="http://api.stopforumspam.org/api", name="Stop Forum Spam", requires_api_key=False)
+        super().__init__(url="https://api.stopforumspam.org/api", name="Stop Forum Spam", requires_api_key=False)
     
     async def fetch_ipv4_intel(self, ip: str) -> dict:
         return await self.fetch_ip_intel(ip)
@@ -56,24 +56,27 @@ class StopForumSpamSource(BaseSource):
         return None
     
     def create_url(self, indicator):
-        return f"{self.url}?ip={indicator}"
+        if indicator:
+            return f"{self.url}?ip={indicator}"
+        else:
+            return "https://www.stopforumspam.com/search"
     
     def parse_intel(self, intel: dict) -> dict:
         verdict = 0
         response = intel.get("response")
-                        
+        summary_string = "No results"
+
+        frequency = response.get("frequency", 0)
         appears = response.get("appears", "")
         if appears == "yes":
             last_seen = response.get("lastseen")
+            summary_string = f"Last seen: {last_seen}, frequency: {frequency}"
             verdict = 1
-        frequency = response.get("frequency")
         
         if int(frequency) > 5:
             verdict += 1
-        elif int("frequency") > 20:
+        elif int(frequency) > 20:
             verdict += 2
-        
-        summary_string = f"Appears: {appears}, frequency: {frequency}"
         
         formatted_intel = self.format_response(summary=summary_string, verdict=verdict, url=self.create_url(""), data=response)
         
