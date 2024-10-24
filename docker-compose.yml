@@ -9,11 +9,11 @@ services:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - SECRET_KEY=ET2Hri8wOF5dVplna91hLJfH2Ry3M1KMf1kCVddJrM0=
+      - CACHE_EXPIRATION=3600
     ports:
       - "5000:5000"
     depends_on:
       - redis
-      - celery-worker
     volumes:
       - .:/app
       - sqlite_data:/app/instance
@@ -24,6 +24,7 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
+    restart: on-failure
     logging:
       driver: "json-file"
       options:
@@ -37,6 +38,7 @@ services:
     container_name: threat-lense-redis-cache
     networks:
       - threat_lense_network
+    restart: on-failure
     logging:
       driver: "json-file"
       options:
@@ -51,10 +53,14 @@ services:
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - MAX_CONCURRENT_REQUESTS=25
+      - CACHE_EXPIRATION=3600
     depends_on:
       - redis
+      - app
     volumes:
       - .:/app
+      - sqlite_data:/app/instance
     command: ["celery", "-A", "app.celery_worker.celery", "worker", "--loglevel=info"]
     healthcheck:
       test: ["CMD", "celery", "-A", "app.celery_worker.celery", "inspect", "ping"]
@@ -62,7 +68,7 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
-    restart: always
+    restart: on-failure
     logging:
       driver: "json-file"
       options:

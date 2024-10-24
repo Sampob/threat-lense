@@ -8,8 +8,6 @@ from app.utils.logger import setup_logger
 
 import asyncio
 
-semaphore = asyncio.Semaphore(Config.MAX_CONCURRENT_REQUESTS)
-
 logger = setup_logger(__name__)
 
 @celery.task(bind=True)
@@ -38,6 +36,7 @@ async def main_task(indicator: str):
     logger.debug(f"Indicator type: {indicator_type.name}")
 
     async def query_source(source: BaseSource):
+        semaphore = asyncio.Semaphore(Config.MAX_CONCURRENT_REQUESTS)
         async with semaphore:
             try:
                 response = await source.fetch_intel(indicator, indicator_type)

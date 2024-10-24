@@ -114,6 +114,12 @@ def get_sources():
     
     return jsonify(result)
 
+@main.route("/sources/configured", methods=["GET"])
+def fetch_configured():
+    all = APIKey.query.all()
+    source_names = [i.source_name for i in all]
+    return jsonify({"status": "success", "configured_sources": source_names}), 200
+
 @main.route("/sources/<source_id>", methods=["POST"])
 def set_api_key(source_id):
     logger.debug(f"Flask POST request for /sources/{source_id}")

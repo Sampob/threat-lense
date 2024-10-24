@@ -26,6 +26,8 @@ def setup_logger(name: str, level=logging.DEBUG) -> logging.Logger:
     # Add the handlers to the logger
     logger.addHandler(console_handler)
 
+    logger.propagate = False
+
     return logger
 
 # Create a default logger for the application

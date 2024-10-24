@@ -29,5 +29,5 @@ def make_celery(app) -> Celery:
     celery.Task = ContextTask
     return celery
 
-app = create_app()
+app = create_app(True)
 celery = make_celery(app)

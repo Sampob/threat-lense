@@ -13,36 +13,33 @@ from redis.exceptions import TimeoutError as RedisTimeoutError
 migrate = Migrate()
 
 # Flask app factory
-def create_app_for_flask() -> Flask:
-    try:
-        app_logger.debug(f"Testing connection to Redis at {Config.REDIS_HOST}:{Config.REDIS_PORT}")
-        redis_client.ping()
-        app_logger.debug("Connection successful, continuing initialization")
-    except RedisTimeoutError as e:
-        app_logger.error("Connection to Redis timed out, exiting")
-        sys.exit()
+def create_app(celery=False) -> Flask:
+    if not celery:
+        try:
+            app_logger.debug(f"Testing connection to Redis at {Config.REDIS_HOST}:{Config.REDIS_PORT}")
+            redis_client.ping()
+            app_logger.debug("Connection successful, continuing initialization")
+        except RedisTimeoutError as e:
+            app_logger.error("Connection to Redis timed out, exiting")
+            sys.exit()
     
-    app = create_app()
-    migrate.init_app(app, db)
-
-    # Register Flask routes
-    from app.routes import main as main_blueprint
-    app.register_blueprint(main_blueprint)
-    
-    with app.app_context():
-        db.create_all()
-        seed_sources()
-
-    return app
-
-def create_app() -> Flask:
     app = Flask(__name__)
 
     # Load configuration
     app.config.from_object(Config)
     
     db.init_app(app)
-    
+    migrate.init_app(app, db)
+
+    # Register Flask routes
+    if not celery:
+        from app.routes import main as main_blueprint
+        app.register_blueprint(main_blueprint)
+        
+        with app.app_context():
+            db.create_all()
+            seed_sources()
+
     return app
 
 def seed_sources():

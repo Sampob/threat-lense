@@ -14,10 +14,10 @@ class Config:
     result_backend = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_DB}"
     
     # Concurrency
-    MAX_CONCURRENT_REQUESTS = 5
+    MAX_CONCURRENT_REQUESTS = int(os.getenv("MAX_CONCURRENT_REQUESTS", 20))
 
     # Cache expiration settings
-    CACHE_EXPIRATION = 3600  # Cache expiration in seconds (1 hour)
+    CACHE_EXPIRATION = int(os.getenv("CACHE_EXPIRATION", 3600))  # Cache expiration in seconds (default 1 hour)
 
     # SQLAlchemy settings
     SQLALCHEMY_DATABASE_URI = os.getenv("SQLALCHEMY_DATABASE_URI", "sqlite:///app_management.db")
