@@ -7,7 +7,7 @@ WORKDIR /app
 COPY app/requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
-RUN PIP install --no-cache-dir gunicorn
+RUN pip install --no-cache-dir gunicorn
 
 # Copy the current directory contents into the container
 COPY . .
