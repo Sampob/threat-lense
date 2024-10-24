@@ -75,7 +75,8 @@ class BaseSource(abc.ABC):
                 cache_results(redis_key, api_key)
                 return api_key
             else:
-                raise ValueError(f"No API key found in the database for {name}")
+                logger.error(f"Empty API key found in the database for {name}")
+                raise ValueError(f"Empty API key found in the database for {name}")
     
     def format_response(self, summary: str="", verdict: int=-1, url: str="", data: dict={}) -> dict:
         """
@@ -192,7 +193,7 @@ class BaseSource(abc.ABC):
             try:
                 self.api_key = self.fetch_api_key()
             except ValueError as e:
-                logger.error(e)
+                logger.info(e)
                 return None
                 
         data = None

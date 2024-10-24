@@ -19,6 +19,8 @@ def make_celery(app) -> Celery:
     )
     celery.conf.update(app.config)
 
+    celery.conf.broker_connection_retry_on_startup = True
+
     class ContextTask(celery.Task):
         def __call__(self, *args, **kwargs):
             with app.app_context():

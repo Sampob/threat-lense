@@ -20,6 +20,7 @@ def search_task(self, indicator: str):
 
 async def main_task(indicator: str):
     # Generate cache key
+    indicator = indicator.strip()
     cache_key = generate_cache_key(indicator)
 
     # Check for cached results
@@ -64,7 +65,6 @@ async def main_task(indicator: str):
             encountered_error = True
             break
     
-    logger.debug("Adding additional data to results")
     final_result = {
         "indicator": indicator,
         "type": get_indicator_type(indicator).name,
