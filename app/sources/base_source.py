@@ -106,6 +106,16 @@ class BaseSource(abc.ABC):
     def format_error(self, url: str="", message: str="", status_code: int=None, timestamp: datetime=datetime.now(timezone.utc)) -> dict:
         """
         Formats error messages in unified way. 
+        {
+            "summary": "error",
+            "verdict": "ERROR",
+            "url": "url",
+            "data": {
+                "message": "error message",
+                "status_code": "http status code or -1",
+                "timestamp": "current timestamp"
+            }
+        }
         
         :param url: URL to the service's result
         :param message: Error message explaining what happened to cause the error
@@ -168,7 +178,7 @@ class BaseSource(abc.ABC):
                 logger.error(f"URL: {url}, HTTP Error: {e.status} - {e.message}")
                 if e.status in {500, 502, 503, 504}: # Retry on server errors
                     attempt += 1
-                    logger.error(f"Retrying... ({attempt}/{retries})")
+                    logger.error(f"Server error, retrying... ({attempt}/{retries})")
                 else:
                     raise
             except aiohttp.ClientError as e:
@@ -195,20 +205,23 @@ class BaseSource(abc.ABC):
             except ValueError as e:
                 logger.info(e)
                 return None
-                
+        
         data = None
-        if indicator_type == IndicatorType.IPv4:
-            data = await self.fetch_ipv4_intel(indicator)
-        elif indicator_type == IndicatorType.IPv6:
-            data = await self.fetch_ipv6_intel(indicator)
-        elif indicator_type == IndicatorType.DOMAIN:
-            data = await self.fetch_domain_intel(indicator)
-        elif indicator_type == IndicatorType.URL:
-            data = await self.fetch_url_intel(indicator)
-        elif indicator_type == IndicatorType.HASH:
-            data = await self.fetch_hash_intel(indicator)
-        else:
-            logger.warning(f"Invalid indicator type for indicator {indicator}")
+        try:
+            if indicator_type == IndicatorType.IPv4:
+                data = await self.fetch_ipv4_intel(indicator)
+            elif indicator_type == IndicatorType.IPv6:
+                data = await self.fetch_ipv6_intel(indicator)
+            elif indicator_type == IndicatorType.DOMAIN:
+                data = await self.fetch_domain_intel(indicator)
+            elif indicator_type == IndicatorType.URL:
+                data = await self.fetch_url_intel(indicator)
+            elif indicator_type == IndicatorType.HASH:
+                data = await self.fetch_hash_intel(indicator)
+            else:
+                logger.warning(f"Invalid indicator type for indicator {indicator}")
+        except Exception as e:
+            logger.error(f"Error occurred during fetching intel: {str(e)}")
         return data
     
     @abc.abstractmethod

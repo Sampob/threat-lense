@@ -16,22 +16,20 @@ main = Blueprint("main", __name__)
 def bad_request_error(error):
     return jsonify({
         "error": "Bad Request",
-        "message": f"The request could not be processed: {error}",
+        "message": error,
         "status_code": 400,
         "path": request.path,
         "timestamp": str(datetime.now(timezone.utc)),
-        "hint": "Ensure all required parameters are provided and valid."
     }), 400
 
 @main.errorhandler(404)
 def not_found_error(error):
     return jsonify({
         "error": "Not Found",
-        "message": f"The request could not be found: {error}",
+        "message": error,
         "status_code": 404,
         "path": request.path,
         "timestamp": str(datetime.now(timezone.utc)),
-        "hint": "Ensure all required parameters are provided and valid."
     }), 404
 
 @main.route("/health", methods=["GET"])
@@ -46,9 +44,9 @@ def search():
         return bad_request_error("Invalid parameter")
     
     logger.debug(f"Flask request for /search, with indicator: {indicator}")
-    
+    indicator = indicator.strip()
     if not is_valid_indicator(indicator):
-        return bad_request_error(f"Invalid parameter 'indicator': {indicator}")
+        return bad_request_error(f"Invalid indicator: {indicator}")
     # Start Celery task
     task = search_task.delay(indicator)
 

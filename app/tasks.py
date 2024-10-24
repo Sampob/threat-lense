@@ -19,7 +19,6 @@ def search_task(self, indicator: str):
 
 async def main_task(indicator: str):
     # Generate cache key
-    indicator = indicator.strip()
     cache_key = generate_cache_key(indicator)
 
     # Check for cached results
