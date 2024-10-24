@@ -1,6 +1,8 @@
 from app.sources.base_source import BaseSource
 from app.utils.logger import setup_logger
 
+import base64
+
 import aiohttp
 
 logger = setup_logger(__name__)
@@ -22,7 +24,8 @@ class VirusTotalSource(BaseSource):
         return await self.fetch_intel_by_url(url, domain)
     
     async def fetch_url_intel(self, url_ioc: str) -> dict:
-        url = f"{self.url}urls/{url_ioc}"
+        url_hash = base64.urlsafe_b64encode(url_ioc.encode()).decode().strip("=")
+        url = f"{self.url}urls/{url_hash}"
         return await self.fetch_intel_by_url(url, url_ioc)
     
     async def fetch_hash_intel(self, hash: str) -> dict:
