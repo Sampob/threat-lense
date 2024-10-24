@@ -36,6 +36,11 @@ def not_found_error(error):
 def health_check():
     return jsonify({"status": "running"}), 200
 
+@main.route("/purge", methods=["DELETE"])
+def purge():
+    flush_cache()
+    return jsonify({"status": "successful"}), 200
+
 @main.route("/search", methods=["GET"])
 def search():    
     from app.tasks import search_task
