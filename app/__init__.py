@@ -13,7 +13,7 @@ from redis.exceptions import TimeoutError as RedisTimeoutError
 migrate = Migrate()
 
 # Flask app factory
-def create_app() -> Flask:
+def create_app_for_flask() -> Flask:
     try:
         app_logger.debug(f"Testing connection to Redis at {Config.REDIS_HOST}:{Config.REDIS_PORT}")
         redis_client.ping()
@@ -22,12 +22,7 @@ def create_app() -> Flask:
         app_logger.error("Connection to Redis timed out, exiting")
         sys.exit()
     
-    app = Flask(__name__)
-
-    # Load configuration
-    app.config.from_object(Config)
-    
-    db.init_app(app)
+    app = create_app()
     migrate.init_app(app, db)
 
     # Register Flask routes
@@ -38,6 +33,16 @@ def create_app() -> Flask:
         db.create_all()
         seed_sources()
 
+    return app
+
+def create_app() -> Flask:
+    app = Flask(__name__)
+
+    # Load configuration
+    app.config.from_object(Config)
+    
+    db.init_app(app)
+    
     return app
 
 def seed_sources():
