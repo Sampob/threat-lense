@@ -1,7 +1,7 @@
 from app.sources.base_source import BaseSource
 from app.utils.logger import setup_logger
 
-logger = setup_logger(__name__, log_file="sources.log")
+logger = setup_logger(__name__)
 
 class ThreatMinerSource(BaseSource):
     def __init__(self):

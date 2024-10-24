@@ -5,7 +5,7 @@ from app.utils.logger import setup_logger
 
 import aiohttp
 
-logger = setup_logger(__name__, log_file="sources.log")
+logger = setup_logger(__name__)
 
 class MaltiverseSource(BaseSource):
     def __init__(self):

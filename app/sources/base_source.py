@@ -9,7 +9,7 @@ from app.utils.logger import setup_logger
 import aiohttp
 import xmltodict
 
-logger = setup_logger(__name__, log_file="sources.log")
+logger = setup_logger(__name__)
 
 class BaseSource(abc.ABC):
     """
