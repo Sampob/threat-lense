@@ -65,7 +65,7 @@ class TrancoListSource(BaseSource):
             average_rank = round(sum(ranks) / len(ranks))
             
             # Basic logic to determine verdict
-            if min_rank <= 750000:
+            if min_rank >= 750000:
                 verdict = 1
             summary_string = f"Rank: {average_rank}"
         else:
