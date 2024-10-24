@@ -7,9 +7,8 @@ from app.utils.indicator_type import get_indicator_type
 from app.utils.logger import setup_logger
 
 import asyncio
-from asyncio import Semaphore
 
-semaphore = Semaphore(Config.MAX_CONCURRENT_REQUESTS)
+semaphore = asyncio.Semaphore(Config.MAX_CONCURRENT_REQUESTS)
 
 logger = setup_logger(__name__)
 
