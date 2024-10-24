@@ -5,9 +5,7 @@ celery
 redis
 requests
 ipaddress
-python-dotenv
 aiohttp
 asyncio
 cryptography
 xmltodict
-gunicorn
