@@ -46,14 +46,8 @@ class MaltiverseSource(BaseSource):
         try:
             response = await self.http_request(search_url, headers=headers)
         except aiohttp.ClientResponseError as e:
-            if e.status == 429:
-                logger.error(f"ClientResponseError GreyNoise rate-limit exceeded: {str(e)}")
-                return self.format_response(summary=e.message, verdict=-100, url=self.create_url(indicator), data={})
-            elif e.status == 404:
-                logger.error(f"ClientResponseError indicator {indicator} not found from GreyNoise")
-                return self.format_response(summary="IP not observed scanning the internet", verdict=0, url=self.create_url(indicator), data=e.text)
             logger.error(f"ClientResponseError: {str(e)}")
-            return self.format_error(self.create_url(indicator), message=e.message, status_code=e.status)
+            return self.format_error(self.create_url(type, indicator), message=e.message, status_code=e.status)
         except aiohttp.ClientError as e:
             logger.error(f"ClientError: {str(e)}")
             return self.format_error(self.create_url(indicator), message=str(e))
