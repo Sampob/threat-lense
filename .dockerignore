@@ -1,11 +1,27 @@
-.venv
-__pycache__
+# Ignore Python virtual environments
+.venv/
+venv/
+
+# Ignore environment variables and configuration files
 .env
+*.env
+
+# Ignore Python cache and compiled files
+__pycache__/
+*.pyc
+*.pyo
+
+# Ignore IDE files
+.vscode/
+.idea/
+
+# Ignore Git and Docker files
+.git
+.gitignore
+.dockerignore
+
+# Ignore log and database directories
 logs
 instance
-
-.*
-*.md
-!README.md
 
 test.py
