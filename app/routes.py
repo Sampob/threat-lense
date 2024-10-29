@@ -48,7 +48,7 @@ def search():
     if not indicator:
         return bad_request_error("Invalid parameter")
     
-    logger.debug(f"Flask request for /search, with indicator: {indicator}")
+    logger.info(f"Flask request for /search, with indicator: {indicator}")
     indicator = indicator.strip()
     if not is_valid_indicator(indicator):
         return bad_request_error(f"Invalid indicator: {indicator}")
@@ -62,7 +62,7 @@ def search():
 
 @main.route("/search/status/<task_id>", methods=["GET"])
 def get_task_status(task_id):
-    logger.debug(f"Flask request for /search/status, with task id: {task_id}")
+    logger.info(f"Flask request for /search/status, with task id: {task_id}")
 
     from app.tasks import search_task
     task_result = search_task.AsyncResult(task_id)    
@@ -99,7 +99,7 @@ def get_task_status(task_id):
 
 @main.route("/sources", methods=["GET"])
 def get_sources():
-    logger.debug(f"Flask request for /sources")
+    logger.info(f"Flask request for /sources")
     
     sources = Source.query.all()
         
@@ -116,13 +116,14 @@ def get_sources():
 
 @main.route("/sources/configured", methods=["GET"])
 def fetch_configured():
+    logger.info("Flask request for /sources/configured")
     all = APIKey.query.all()
     source_names = [i.source_name for i in all]
     return jsonify({"status": "success", "configured_sources": source_names}), 200
 
 @main.route("/sources/<source_id>", methods=["POST"])
 def set_api_key(source_id):
-    logger.debug(f"Flask POST request for /sources/{source_id}")
+    logger.info(f"Flask POST request for /sources/{source_id}")
     
     api_key = request.json.get("api_key")
     if not api_key:
@@ -155,7 +156,7 @@ def set_api_key(source_id):
 
 @main.route("/sources/<source_id>", methods=["DELETE"])
 def delete_api_key(source_id):
-    logger.debug(f"Flask DELETE request for /sources/{source_id}")
+    logger.info(f"Flask DELETE request for /sources/{source_id}")
     
     source = Source.query.filter_by(name=source_id).first()
     if not source:
