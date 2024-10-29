@@ -12,7 +12,7 @@ logger = setup_logger(__name__)
 
 @celery.task(bind=True)
 def search_task(self, indicator: str):
-    logger.debug(f"Starting search task for {indicator}")
+    logger.info(f"Starting search task for {indicator}")
     return asyncio.run(main_task(indicator))
 
 async def main_task(indicator: str):
@@ -22,10 +22,10 @@ async def main_task(indicator: str):
     # Check for cached results
     cached_results = fetch_from_cache(cache_key)
     if cached_results:
-        logger.debug(f"Cached result found for {indicator}, returning cached result")
+        logger.info(f"Cached result found for {indicator}, returning cached result")
         return handle_result(cached_results)
 
-    logger.debug(f"No cached result found for {indicator}, proceeding to searching")
+    logger.info(f"No cached result found for {indicator}, proceeding to searching")
 
     sources = SourceRegistry.get_instance()
     
@@ -70,7 +70,7 @@ async def main_task(indicator: str):
     
     # Cache results, ignore if error was encountered and empty results
     if encountered_error:
-        logger.info("Encountered an error, skipping caching")
+        logger.info("Source encountered an error, skipping caching")
     elif results:
         cache_results(cache_key, final_result, expiration=Config.CACHE_EXPIRATION)
     else:

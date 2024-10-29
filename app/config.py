@@ -3,6 +3,8 @@ import os
 class Config:
     # Flask settings
     DEBUG = True
+    FLASK_PORT = os.getenv("FLASK_PORT", 5000)
+    LISTEN_TO_HOSTS = os.getenv("LISTEN_TO_HOSTS", "0.0.0.0")
 
     # Redis settings
     REDIS_HOST = os.getenv("REDIS_HOST", "redis")  # Default to "redis" (Docker service name)

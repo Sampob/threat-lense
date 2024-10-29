@@ -1,7 +1,7 @@
 import logging
 import sys
 
-def setup_logger(name: str, level=logging.DEBUG) -> logging.Logger:
+def setup_logger(name: str, level=logging.INFO) -> logging.Logger:
     """
     Function to set up a logger. Logs are streamed to stdout. 
     

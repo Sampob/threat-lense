@@ -15,9 +15,7 @@ class AbuseIpDbSource(BaseSource):
     async def fetch_ipv6_intel(self, indicator: str) -> dict:
         return await self.fetch_ip_intel(indicator)
     
-    async def fetch_ip_intel(self, indicator: str) -> dict: 
-        logger.debug(f"Searching for indicator {indicator}")
-        
+    async def fetch_ip_intel(self, indicator: str) -> dict:         
         headers = {
             "Accept": "application/json",
             "Key": self.api_key

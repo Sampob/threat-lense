@@ -200,11 +200,12 @@ class BaseSource(abc.ABC):
         
         :return: Enriched IOC data from the source
         """
+        logger.debug(f"Fetching intel for {indicator}, for {self.get_name()}")
         if self.requires_api_key:
             try:
                 self.api_key = self.fetch_api_key()
             except ValueError as e:
-                logger.info(e)
+                logger.error(e)
                 return None
         
         data = None

@@ -32,6 +32,7 @@ class ThreatMinerSource(BaseSource):
             if response.get("status_code") == "404":
                 return self.parse_intel(response)
             else:
+                logger.error("Error occurred")
                 return self.format_error(url, message=response.get("status_message", "Error"), status_code=response.get("status_code"))
             
         return self.parse_intel(response)

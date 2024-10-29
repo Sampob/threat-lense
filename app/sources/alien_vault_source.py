@@ -24,9 +24,7 @@ class AlienVaultSource(BaseSource):
     async def fetch_hash_intel(self, hash: str) -> dict:
         return await self.make_request("file", hash)
     
-    async def make_request(self, type: str, indicator: str) -> dict:
-        logger.debug(f"Searching for indicator {indicator}")
-        
+    async def make_request(self, type: str, indicator: str) -> dict:        
         headers = {
             "X-OTX-API-KEY": self.api_key,
             "Content-Type": "application/json"

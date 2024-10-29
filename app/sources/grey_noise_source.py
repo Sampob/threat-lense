@@ -15,9 +15,7 @@ class GreyNoiseSource(BaseSource):
     async def fetch_ipv6_intel(self, indicator: str) -> dict:
         return await self.fetch_ip_intel(indicator)
     
-    async def fetch_ip_intel(self, indicator: str) -> dict:
-        logger.debug(f"Searching for indicator {indicator}")
-        
+    async def fetch_ip_intel(self, indicator: str) -> dict:        
         headers = {
             "accept": "application/json", 
             "key": self.api_key
