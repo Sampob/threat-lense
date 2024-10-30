@@ -1,7 +1,7 @@
 1. Johdanto
 
 --
-2. Lähtökohdat (Miksi)
+2. Lähtökohdat
 
 2.1 Uhkatiedot
 2.1.1 Uhkatietotyypit
@@ -9,47 +9,51 @@
 2.1.3 Uhkatietojen käyttö
 
 2.2 Julkisiin lähteisiin perustuva tiedustelu-tieto
-2.2.1 Crowdsourcing (AbuseIpDB, VirusTotal)
-2.2.2 Vendors (GreyNoise, Mandiant)
+2.2.1 Joukkoistettu uhkatieto (AbuseIpDB, VirusTotal)
+2.2.2 Kaupalliset toimittajat (GreyNoise, Mandiant)
 2.2.1 Uhkatietojen analysointi
 
 2.3 Työkalut
 
 --
-3. Teknologiat (Mitä)
+3. Teknologiat
 
 3.1 Python
-3.1.1 Flask (routes, orm & db, redis?)
+3.1.1 Flask
 3.1.2 Gunicorn
-3.1.3 Celery (workers, redis?)
-3.1.4 asyncio (async/await, aiohttp)
+3.1.3 Celery
+3.1.4 asyncio
 
-3.2 Redis (MQ & cache)
-3.3 Docker (docker compose)
+3.2 Redis
+
+3.3 Docker
 
 --
-4. Työn  (Miten)
+4. Työn toteutus
 
 4.1 Flask API
-4.1.1 Return data formatting
+4.1.1 API toiminnallisuus
+4.1.2 API endpointit
+4.1.3 Palautus datan muoto
 
 4.2 Celery workers
-4.2.1 Task queue
+4.2.1 Celery tasks
 
-4.3 Intelligence sources
-4.3.1 HTTP requests
-4.3.2 HTTP error handling
+4.3 Julkisiin lähteisiin perustuvat lähteet
+4.3.1 BaseSource
+4.3.2 HTTP kyselyt
 
-4.3 Caching
-4.4 Data management
-4.4.1 Encrypting
+4.3 Välimuisti
+
+4.4 Tiedon varastoiminen
+4.4.1 Salaus
 
 4.5 Docker compose
 
 --
 5. Tulokset
 
-5.1 Deployment
+5.1 Käyttöönotto
 
 5.2 Käyttö
 5.2.1 Tuotantoympäristössä
