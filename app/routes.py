@@ -14,9 +14,10 @@ main = Blueprint("main", __name__)
 
 @main.errorhandler(400)
 def bad_request_error(error):
+    error_str = str(error)
     return jsonify({
         "error": "Bad Request",
-        "message": error,
+        "message": error_str,
         "status_code": 400,
         "path": request.path,
         "timestamp": str(datetime.now(timezone.utc)),
@@ -24,9 +25,10 @@ def bad_request_error(error):
 
 @main.errorhandler(404)
 def not_found_error(error):
+    error_str = str(error)
     return jsonify({
         "error": "Not Found",
-        "message": error,
+        "message": error_str,
         "status_code": 404,
         "path": request.path,
         "timestamp": str(datetime.now(timezone.utc)),
@@ -34,12 +36,12 @@ def not_found_error(error):
 
 @main.route("/health", methods=["GET"])
 def health_check():
-    return jsonify({"status": "running"}), 200
+    return jsonify({"status": "successful", "message": "API is running"}), 200
 
 @main.route("/purge", methods=["DELETE"])
 def purge():
     flush_cache()
-    return jsonify({"status": "successful"}), 200
+    return jsonify({"status": "successful", "message": "cache flushed successfully"}), 200
 
 @main.route("/search", methods=["GET"])
 def search():    
@@ -56,6 +58,7 @@ def search():
     task = search_task.delay(indicator)
 
     return jsonify({
+        "status": "started",
         "task_id": task.id,
         "status_url": f"/search/status/{task.id}"
     }), 202
@@ -89,13 +92,9 @@ def get_task_status(task_id):
     else:
         response = {
             "state": task_result.state,
-            "status": "Task completed successfully!"
+            "status": "Unknown state"
         }
-        if isinstance(task_result.result, str):
-            response["result"] = json.loads(task_result.result)
-        else:
-            response["result"] = task_result.result
-    return jsonify(response)
+    return jsonify(response), 200
 
 @main.route("/sources", methods=["GET"])
 def get_sources():
@@ -112,14 +111,14 @@ def get_sources():
             "api_key_configured": source.is_api_key_configured
         })
     
-    return jsonify(result)
+    return jsonify({"status": "successful", "sources": result}), 200
 
 @main.route("/sources/configured", methods=["GET"])
 def fetch_configured():
     logger.info("Flask request for /sources/configured")
     all = APIKey.query.all()
     source_names = [i.source_name for i in all]
-    return jsonify({"status": "success", "configured_sources": source_names}), 200
+    return jsonify({"status": "successful", "configured_sources": source_names}), 200
 
 @main.route("/sources/<source_id>", methods=["POST"])
 def set_api_key(source_id):
@@ -152,7 +151,7 @@ def set_api_key(source_id):
     redis_key = f"api_key:{source.name}"
     cache_results(redis_key, api_key)
 
-    return jsonify({"message": f"API key for {source.name} set successfully"}), 200
+    return jsonify({"status": "successful", "message": f"API key for {source.name} set successfully"}), 200
 
 @main.route("/sources/<source_id>", methods=["DELETE"])
 def delete_api_key(source_id):
@@ -180,4 +179,4 @@ def delete_api_key(source_id):
     redis_key = f"api_key:{source.name}"
     delete_from_cache(redis_key)
     
-    return jsonify({"message": f"API key for {source.name} deleted successfully"}), 200
+    return jsonify({"status": "successful", "message": f"API key for {source.name} deleted successfully"}), 200
