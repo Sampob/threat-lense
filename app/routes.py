@@ -7,6 +7,7 @@ from app.utils.logger import setup_logger
 from app.models import Source, APIKey, db
 
 from flask import Blueprint, jsonify, request
+from celery.result import AsyncResult
 
 logger = setup_logger(__name__)
 
@@ -67,8 +68,7 @@ def search():
 def get_task_status(task_id):
     logger.info(f"Flask request for /search/status, with task id: {task_id}")
 
-    from app.tasks import search_task
-    task_result = search_task.AsyncResult(task_id)    
+    task_result = AsyncResult(task_id)
     
     if task_result.state == "PENDING":
         response = {
