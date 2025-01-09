@@ -15,6 +15,7 @@ services:
     depends_on:
       - redis
     volumes:
+      - .:/app
       - sqlite_data:/app/instance
     command: ["gunicorn", "-b", "0.0.0.0:5000", "manage:app"]
     healthcheck:
@@ -23,7 +24,7 @@ services:
       timeout: 10s
       retries: 3
       start_period: 30s
-    restart: unless-stopped
+    restart: always
     logging:
       driver: "json-file"
       options:
@@ -58,15 +59,16 @@ services:
       - redis
       - app
     volumes:
+      - .:/app
       - sqlite_data:/app/instance
-    command: ["celery", "-A", "app.celery_worker.celery", "worker", "-l", "INFO"]
+    command: ["celery", "-A", "app.celery_worker.celery", "worker", "--loglevel=info"]
     healthcheck:
       test: ["CMD", "celery", "-A", "app.celery_worker.celery", "inspect", "ping"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 30s
-    restart: unless-stopped
+    restart: always
     logging:
       driver: "json-file"
       options:
