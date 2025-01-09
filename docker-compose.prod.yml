@@ -1,0 +1,82 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.flask
+    container_name: threat-lense
+    environment:
+      - FLASK_ENV=production
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - SECRET_KEY=ET2Hri8wOF5dVplna91hLJfH2Ry3M1KMf1kCVddJrM0=
+      - CACHE_EXPIRATION=3600
+    ports:
+      - "5000:5000"
+    depends_on:
+      - redis
+    volumes:
+      - sqlite_data:/app/instance
+    command: ["gunicorn", "-b", "0.0.0.0:5000", "manage:app"]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - threat_lense_network
+    
+  redis:
+    image: "redis:alpine"
+    container_name: threat-lense-redis-cache
+    networks:
+      - threat_lense_network
+    restart: on-failure
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  celery-worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.celery
+    container_name: threat-lense-celery-worker
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - MAX_CONCURRENT_REQUESTS=25
+      - CACHE_EXPIRATION=3600
+    depends_on:
+      - redis
+      - app
+    volumes:
+      - sqlite_data:/app/instance
+    command: ["celery", "-A", "app.celery_worker.celery", "worker", "-l", "INFO"]
+    healthcheck:
+      test: ["CMD", "celery", "-A", "app.celery_worker.celery", "inspect", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - threat_lense_network
+
+volumes:
+  sqlite_data:
+
+networks:
+  threat_lense_network:
