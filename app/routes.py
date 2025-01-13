@@ -13,6 +13,10 @@ logger = setup_logger(__name__)
 
 main = Blueprint("main", __name__)
 
+@main.before_request
+def log_request_info():
+    logger.info(f"{request.method} request for {request.path}")
+
 @main.errorhandler(400)
 def bad_request_error(error):
     error_str = str(error)
@@ -51,7 +55,7 @@ def search():
     if not indicator:
         return bad_request_error("Invalid parameter")
     
-    logger.info(f"Flask request for /search, with indicator: {indicator}")
+    logger.info(f"Received /search, with indicator: {indicator}")
     indicator = indicator.strip()
     if not is_valid_indicator(indicator):
         return bad_request_error(f"Invalid indicator: {indicator}")
@@ -66,8 +70,6 @@ def search():
 
 @main.route("/search/status/<task_id>", methods=["GET"])
 def get_task_status(task_id):
-    logger.info(f"Flask request for /search/status, with task id: {task_id}")
-
     task_result = AsyncResult(task_id)
     
     if task_result.state == "PENDING":
@@ -97,9 +99,7 @@ def get_task_status(task_id):
     return jsonify(response), 200
 
 @main.route("/sources", methods=["GET"])
-def get_sources():
-    logger.info(f"Flask request for /sources")
-    
+def get_sources():    
     sources = Source.query.all()
         
     result = []
@@ -115,15 +115,12 @@ def get_sources():
 
 @main.route("/sources/configured", methods=["GET"])
 def fetch_configured():
-    logger.info("Flask request for /sources/configured")
     all = APIKey.query.all()
     source_names = [i.source_name for i in all]
     return jsonify({"status": "successful", "configured_sources": source_names}), 200
 
 @main.route("/sources/<source_id>", methods=["POST"])
-def set_api_key(source_id):
-    logger.info(f"Flask POST request for /sources/{source_id}")
-    
+def set_api_key(source_id):    
     api_key = request.json.get("api_key")
     if not api_key:
         return bad_request_error("Invalid parameter")
@@ -154,9 +151,7 @@ def set_api_key(source_id):
     return jsonify({"status": "successful", "message": f"API key for {source.name} set successfully"}), 200
 
 @main.route("/sources/<source_id>", methods=["DELETE"])
-def delete_api_key(source_id):
-    logger.info(f"Flask DELETE request for /sources/{source_id}")
-    
+def delete_api_key(source_id):    
     source = Source.query.filter_by(name=source_id).first()
     if not source:
         source = Source.query.filter_by(id=source_id).first()
